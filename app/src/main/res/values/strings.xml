@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">StudyRays</string>
+    <string name="exo_download_notification_channel_name">Video downloads</string>
+    <string name="exo_download_description">Download description</string>
+    <string name="download_start_error_offline_license">download_start_error_offline_license</string>
+    <string name="download_live_unsupported">download_live_unsupported</string>
+    <string name="download_start_error">download_start_error</string>
+    <string name="error_drm_unsupported_before_api_18">error_drm_unsupported_before_api_18</string>
+    <string name="exo_download_completed">download completed</string>
+    <string name="exo_download_downloading">Downloading..</string>
+    <string name="exo_download_failed">Download Failed</string>
+    <string name="exo_download_queued">Download queued</string>
+    <string name="exo_download_removing">Removing download</string>
+    <string name="exo_download_restarting">Restarting download</string>
+    <string name="exo_download_stopped">Download stopped</string>
+    <string name="dialog_option">%1$dp - %2$s</string>
+
+</resources>
