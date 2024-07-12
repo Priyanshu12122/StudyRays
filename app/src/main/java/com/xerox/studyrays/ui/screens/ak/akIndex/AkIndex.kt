@@ -41,6 +41,7 @@ import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.ak.AkViewModel
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 import kotlinx.coroutines.launch
 
@@ -120,21 +121,7 @@ fun AkIndex(
                 ) {
 
                     if (result.data.data.batchData.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            val composition by rememberLottieComposition(
-                                spec = LottieCompositionSpec.RawRes(
-                                    if (isSystemInDarkTheme()) R.raw.comingsoondarkmode else R.raw.comingsoon
-                                )
-                            )
-
-                            LottieAnimation(
-                                composition = composition,
-                                iterations = LottieConstants.IterateForever,
-                                modifier = Modifier
-                                    .size(300.dp)
-                                    .align(Alignment.Center)
-                            )
-                        }
+                        NoFilesFoundScreen()
                     } else {
 
                         PullToRefreshLazyColumn(

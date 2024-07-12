@@ -43,7 +43,6 @@ fun PdfViewerScreen(
     val baseUrl = "https://docs.google.com/gview?embedded=true&url="
     val mainUrl = baseUrl + url
 
-
     Scaffold(
         modifier = Modifier
             .fillMaxSize()

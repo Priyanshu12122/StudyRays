@@ -6,9 +6,11 @@ import com.xerox.studyrays.R
 import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.DrawerItem
 import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.MainScreenItem
 import com.xerox.studyrays.ui.theme.AquaBlue
+import com.xerox.studyrays.ui.theme.Beige1
 import com.xerox.studyrays.ui.theme.Beige3
 import com.xerox.studyrays.ui.theme.BlueViolet3
 import com.xerox.studyrays.ui.theme.ButtonBlue
+import com.xerox.studyrays.ui.theme.DarkerButtonBlue
 import com.xerox.studyrays.ui.theme.LightGreen1
 import com.xerox.studyrays.ui.theme.LightGreen3
 import com.xerox.studyrays.ui.theme.LightRed
@@ -26,7 +28,7 @@ val navBarList = listOf(
         "Support Us"
     ),
     DrawerItem(
-        R.drawable.telegram,
+        R.drawable.telegramoutlined,
         "Telegram",
         "Join Telegram"
     ),
@@ -53,7 +55,7 @@ fun mainScreenItemsList(): List<MainScreenItem> {
             title = "Khazana",
             raw = R.raw.khazanaaa,
             colors = listOf(
-                LightRed, LightGreen3
+                BlueViolet3, LightGreen3
             )
         ),
         MainScreenItem(
@@ -67,7 +69,15 @@ fun mainScreenItemsList(): List<MainScreenItem> {
             title = "Favourite Batches",
             raw = R.raw.favourite,
             colors = listOf(
-                OrangeYellow2, AquaBlue
+                AquaBlue, OrangeYellow2
+            )
+        ),
+        MainScreenItem(
+            isRaw = true,
+            title = "Update/add batches",
+            raw = R.raw.update,
+            colors = listOf(
+                Beige1, DarkerButtonBlue
             )
         ),
         MainScreenItem(
@@ -75,7 +85,7 @@ fun mainScreenItemsList(): List<MainScreenItem> {
             title = "Follow on Telegram",
             raw = R.raw.telegramm,
             colors = listOf(
-                ButtonBlue, Beige3
+                DarkerButtonBlue, Beige3
             )
         )
     )

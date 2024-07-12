@@ -50,6 +50,7 @@ class KhazanaViewModel @Inject constructor(
 
     private val noInternetMsg = "Internet Unavailable."
     private val socketErrorMsg = "Socket timeout: Either slow internet or server issue."
+    val nullErrorMsg = "Null"
 
     val refreshMsg = "Refreshed Successfully!"
 
@@ -57,6 +58,7 @@ class KhazanaViewModel @Inject constructor(
     private val _khazana: MutableStateFlow<ResponseTwo<List<KhazanaEntity>>> =
         MutableStateFlow(ResponseTwo.Loading())
     val khazana = _khazana.asStateFlow()
+
     var isRefreshing by mutableStateOf(false)
 
     fun getKhazana(
@@ -123,16 +125,21 @@ class KhazanaViewModel @Inject constructor(
                     topicName = topicName
                 )
                 else repository.getKhazanaVideos(
-                    subjectId,
-                    chapterId,
-                    topicId,
+                    subjectId = subjectId,
+                    chapterId = chapterId,
+                    topicId = topicId,
                     topicName = topicName
                 )
                 val decodedData = Base64.getDecoder().decode(response.response)
                 val decryptedData = decrypt(decodedData, key, iv)
-                val data: List<KhazanaVideoItem> =
-                    gson.fromJson(decryptedData, Array<KhazanaVideoItem>::class.java).toList()
-                _khazanaVideo.value = Response.Success(data)
+                val data: List<KhazanaVideoItem>? =
+                    gson.fromJson(decryptedData, Array<KhazanaVideoItem>::class.java)?.toList()
+
+                if (data == null){
+                    throw NullPointerException(nullErrorMsg)
+                } else {
+                    _khazanaVideo.value = Response.Success(data)
+                }
             } catch (e: SocketTimeoutException) {
                 _khazanaVideo.value =
                     Response.Error(socketErrorMsg)
@@ -197,9 +204,14 @@ class KhazanaViewModel @Inject constructor(
                     else repository.getKhazanaNotes(subjectId = subjectId, chapterId = chapterId, topicId = topicId, topicName = topicName)
                 val decodedData = Base64.getDecoder().decode(response.response)
                 val decryptedData = decrypt(decodedData, key, iv)
-                val data: List<KhazanaNotesItem> =
-                    gson.fromJson(decryptedData, Array<KhazanaNotesItem>::class.java).toList()
-                _khazanaNotes.value = Response.Success(data)
+                val data: List<KhazanaNotesItem>? =
+                    gson.fromJson(decryptedData, Array<KhazanaNotesItem>::class.java)?.toList()
+
+                if (data == null){
+                    throw NullPointerException(nullErrorMsg)
+                } else {
+                    _khazanaNotes.value = Response.Success(data)
+                }
             } catch (e: SocketTimeoutException) {
                 _khazanaNotes.value =
                     Response.Error(socketErrorMsg)
@@ -264,9 +276,13 @@ class KhazanaViewModel @Inject constructor(
                     else repository.getKhazanaDpp(subjectId, chapterId, topicId, topicName = topicName)
                 val decodedData = Base64.getDecoder().decode(response.response)
                 val decryptedData = decrypt(decodedData, key, iv)
-                val data: KhazanaDpp =
+                val data: KhazanaDpp? =
                     gson.fromJson(decryptedData, KhazanaDpp::class.java)
-                _khazanaDpp.value = Response.Success(data)
+                if (data == null){
+                    throw NullPointerException(nullErrorMsg)
+                } else {
+                    _khazanaDpp.value = Response.Success(data)
+                }
 
             } catch (e: SocketTimeoutException) {
                 _khazanaDpp.value =
@@ -332,9 +348,13 @@ class KhazanaViewModel @Inject constructor(
                     else repository.getKhazanaSolution(subjectId, chapterId, topicId,topicName = topicName)
                 val decodedData = Base64.getDecoder().decode(response.response)
                 val decryptedData = decrypt(decodedData, key, iv)
-                val data: KhazanaSolution =
+                val data: KhazanaSolution? =
                     gson.fromJson(decryptedData, KhazanaSolution::class.java)
-                _khazanaSolutions.value = Response.Success(data)
+                if (data == null){
+                    throw NullPointerException(nullErrorMsg)
+                } else {
+                    _khazanaSolutions.value = Response.Success(data)
+                }
             } catch (e: SocketTimeoutException) {
                 _khazanaSolutions.value =
                     Response.Error(socketErrorMsg)
@@ -398,16 +418,20 @@ class KhazanaViewModel @Inject constructor(
                 else repository.getKhazanaTeachers(id)
                 val decodedData = Base64.getDecoder().decode(response.response)
                 val decryptedData = decrypt(decodedData, key, iv)
-                val data: List<KhazanaTeacherItem> =
-                    gson.fromJson(decryptedData, Array<KhazanaTeacherItem>::class.java).toList()
-                _khazanaTeachers.value = Response.Success(data)
+                val data: List<KhazanaTeacherItem>? =
+                    gson.fromJson(decryptedData, Array<KhazanaTeacherItem>::class.java)?.toList()
+                if (data == null){
+                    throw NullPointerException(nullErrorMsg)
+                } else {
+                    _khazanaTeachers.value = Response.Success(data)
+                }
             } catch (e: SocketTimeoutException) {
                 _khazanaTeachers.value =
                     Response.Error(socketErrorMsg)
             } catch (e: UnknownHostException) {
                 _khazanaTeachers.value = Response.Error(noInternetMsg)
             } catch (e: Exception) {
-                _khazanaTeachers.value = Response.Error(e.localizedMessage!!)
+                _khazanaTeachers.value = Response.Error(e.localizedMessage ?: "An error occurred")
             } finally {
                 if (isRefresh) {
                     isRefreshing = false
@@ -524,9 +548,13 @@ class KhazanaViewModel @Inject constructor(
                 else repository.getKhazanaSubjects(slug)
                 val decodedData = Base64.getDecoder().decode(response.response)
                 val decryptedData = decrypt(decodedData, key, iv)
-                val data: List<KhazanaSubjectItem> =
-                    gson.fromJson(decryptedData, Array<KhazanaSubjectItem>::class.java).toList()
-                _khazanaSubject.value = Response.Success(data)
+                val data: List<KhazanaSubjectItem>? =
+                    gson.fromJson(decryptedData, Array<KhazanaSubjectItem>::class.java)?.toList()
+                if (data == null){
+                    throw NullPointerException(nullErrorMsg)
+                } else {
+                    _khazanaSubject.value = Response.Success(data)
+                }
             } catch (e: SocketTimeoutException) {
                 _khazanaSubject.value =
                     Response.Error(socketErrorMsg)
@@ -576,9 +604,13 @@ class KhazanaViewModel @Inject constructor(
                     else repository.getKhazanaChapters(subjectId, chapterId)
                 val decodedData = Base64.getDecoder().decode(response.response)
                 val decryptedData = decrypt(decodedData, key, iv)
-                val data: List<KhazanaChaptersItem> =
-                    gson.fromJson(decryptedData, Array<KhazanaChaptersItem>::class.java).toList()
-                _khazanaChapters.value = Response.Success(data)
+                val data: List<KhazanaChaptersItem>? =
+                    gson.fromJson(decryptedData, Array<KhazanaChaptersItem>::class.java)?.toList()
+                if (data == null){
+                    throw NullPointerException(nullErrorMsg)
+                } else {
+                    _khazanaChapters.value = Response.Success(data)
+                }
             } catch (e: SocketTimeoutException) {
                 _khazanaChapters.value =
                     Response.Error(socketErrorMsg)

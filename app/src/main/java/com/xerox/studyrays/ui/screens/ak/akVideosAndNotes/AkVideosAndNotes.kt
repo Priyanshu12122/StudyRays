@@ -4,12 +4,9 @@ import android.Manifest
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -23,41 +20,30 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.stevdzasan.messagebar.rememberMessageBarState
-import com.xerox.studyrays.R
-import com.xerox.studyrays.db.videoDb.Video
 import com.xerox.studyrays.downloadManager.AndroidDownloader
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.screens.ak.AkViewModel
-import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForVideo
-import com.xerox.studyrays.utils.BottomSheet
+import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForVideo2
 import com.xerox.studyrays.utils.CategoryTabRow2
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 import kotlinx.coroutines.launch
 
@@ -73,7 +59,7 @@ fun AkVideosAndNotes(
     sid: Int,
     tid: Int,
     bid: Int,
-    onClick: (String, Int, Int, Int, Int, String) -> Unit,
+    onClick: (String, Int, Int, Int, Int, String, String) -> Unit,
     onPdfViewClicked: (String, String) -> Unit,
     onBackClick: () -> Unit,
 ) {
@@ -167,88 +153,57 @@ fun AkVideosAndNotes(
                             0 -> {
 
                                 if (result.data.data.class_list.classes.isEmpty()) {
-                                    Box(modifier = Modifier.fillMaxSize()) {
-                                        val composition by rememberLottieComposition(
-                                            spec = LottieCompositionSpec.RawRes(
-                                                if (isSystemInDarkTheme()) R.raw.comingsoondarkmode else R.raw.comingsoon
-                                            )
-                                        )
-
-                                        LottieAnimation(
-                                            composition = composition,
-                                            iterations = LottieConstants.IterateForever,
-                                            modifier = Modifier
-                                                .size(300.dp)
-                                                .align(Alignment.Center)
-                                        )
-                                    }
+                                    NoFilesFoundScreen()
                                 } else {
 
-                                    val savedStatusMap =
-                                        remember { mutableStateMapOf<String, Boolean>() }
-
-                                    var isOpen by rememberSaveable {
-                                        mutableStateOf(false)
-                                    }
-
-                                    var selectedVideoId by rememberSaveable {
-                                        mutableStateOf("")
-                                    }
-
-                                    var isCompleted by rememberSaveable {
-                                        mutableStateOf(false)
-                                    }
-
-
-                                    if (isOpen) {
-                                        BottomSheet(
-                                            sheetState = rememberModalBottomSheetState(),
-                                            onMarkAsCompletedClicked = {
-                                                mainViewModel.onMarkAsCompleteClicked(
-                                                    Video(
-                                                        selectedVideoId
-                                                    )
-                                                )
-                                                savedStatusMap[selectedVideoId] = !isCompleted
-                                                isOpen = false
-
-                                            },
-                                            onDownloadClicked = {
-                                                // Perform download action
-                                            },
-                                            isCompleted = isCompleted
-                                        ) {
-                                            isOpen = false
-                                        }
-                                    }
+//                                    val savedStatusMap =
+//                                        remember { mutableStateMapOf<String, Boolean>() }
+//
+//                                    var isOpen by rememberSaveable {
+//                                        mutableStateOf(false)
+//                                    }
+//
+//                                    var selectedVideoId by rememberSaveable {
+//                                        mutableStateOf("")
+//                                    }
+//
+//                                    var isCompleted by rememberSaveable {
+//                                        mutableStateOf(false)
+//                                    }
+//
+//
+//                                    if (isOpen) {
+//                                        BottomSheet(
+//                                            sheetState = rememberModalBottomSheetState(),
+//                                            onMarkAsCompletedClicked = {
+//                                                mainViewModel.onMarkAsCompleteClicked(
+//                                                    Video(
+//                                                        selectedVideoId
+//                                                    )
+//                                                )
+//                                                savedStatusMap[selectedVideoId] = !isCompleted
+//                                                isOpen = false
+//
+//                                            },
+//                                            onDownloadClicked = {
+//                                                // Perform download action
+//                                            },
+//                                            isCompleted = isCompleted
+//                                        ) {
+//                                            isOpen = false
+//                                        }
+//                                    }
 
                                     PullToRefreshLazyColumn(
                                         items = result.data.data.class_list.classes,
                                         content = {
-                                            val isComplete = savedStatusMap[it.uniqueId] ?: false
 
-                                            EachCardForVideo(
+                                            EachCardForVideo2(
                                                 imageUrl = it.posterUrl,
                                                 title = it.lessonName,
                                                 dateCreated = it.startDateTime,
                                                 duration = it.timeDuration,
-                                                isCompleted = isComplete,
-                                                onMoreVertClicked = {
-                                                    isOpen = true
-                                                    selectedVideoId = it.uniqueId
-                                                    isCompleted = isComplete
-                                                },
                                                 videoId = it.uniqueId,
-                                                checkIfCompleted = { id ->
-                                                    scope.launch {
-                                                        val saved =
-                                                            mainViewModel.checkIfItemIsPresentInVideoDb(
-                                                                Video(id)
-                                                            )
-                                                        savedStatusMap[it.uniqueId] = saved
-                                                    }
-
-                                                }
                                             ) {
                                                 onClick(
                                                     it.lessonUrl,
@@ -256,7 +211,8 @@ fun AkVideosAndNotes(
                                                     bid,
                                                     tid,
                                                     it.id,
-                                                    it.lessonName
+                                                    it.lessonName,
+                                                    it.uniqueId
                                                 )
 
                                             }
@@ -269,47 +225,6 @@ fun AkVideosAndNotes(
                                                 vm.showSnackBar(snackBarHostState)
                                             }
                                         })
-
-//                                    LazyColumn {
-//                                        items(result.data.data.class_list.classes) {
-//
-//                                            val isComplete = savedStatusMap[it.uniqueId] ?: false
-//
-//                                            EachCardForVideo(
-//                                                imageUrl = it.posterUrl,
-//                                                title = it.lessonName,
-//                                                dateCreated = it.startDateTime,
-//                                                duration = it.timeDuration,
-//                                                isCompleted = isComplete,
-//                                                onMoreVertClicked = {
-//                                                    isOpen = true
-//                                                    selectedVideoId = it.uniqueId
-//                                                    isCompleted = isComplete
-//                                                },
-//                                                videoId = it.uniqueId,
-//                                                checkIfCompleted = { id ->
-//                                                    scope.launch {
-//                                                        val saved =
-//                                                            mainViewModel.checkIfItemIsPresentInVideoDb(
-//                                                                Video(id)
-//                                                            )
-//                                                        savedStatusMap[it.uniqueId] = saved
-//                                                    }
-//
-//                                                }
-//                                            ) {
-//                                                onClick(
-//                                                    it.lessonUrl,
-//                                                    sid,
-//                                                    bid,
-//                                                    tid,
-//                                                    it.id,
-//                                                    it.lessonName
-//                                                )
-//
-//                                            }
-//                                        }
-//                                    }
                                 }
                             }
 

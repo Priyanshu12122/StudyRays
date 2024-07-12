@@ -5,6 +5,8 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.util.Log
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,8 +22,10 @@ class NetworkManager(private val context: Context) {
     private val _isVpnActive: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isVpnActive = _isVpnActive.asStateFlow()
 
+
     init {
         checkVpnState()
+        observeNetworkState()
     }
 
     fun checkVpnState() {
@@ -31,6 +35,13 @@ class NetworkManager(private val context: Context) {
         _isVpnActive.value = vpnActive
     }
 
+//    private val _isConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
+//    val isConnected = _isConnected.asStateFlow()
+//
+//
+//    suspend fun observeInternetAccessibility() {
+//            observeNetworkState().collect(_isConnected)
+//    }
 
     fun observeNetworkState(): Flow<Boolean> {
         return callbackFlow {

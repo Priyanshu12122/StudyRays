@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName
 data class Subject(
     @SerializedName("_id") val _id: String,
     @SerializedName("fileId") val fileId: FileId,
-    @SerializedName("imageId") val imageId: ImageId,
+    @SerializedName("imageId") val imageId: ImageId?,
     @SerializedName("schedules") val schedules: List<Schedule>,
     @SerializedName("slug") val slug: String,
     @SerializedName("subject") val subject: String,

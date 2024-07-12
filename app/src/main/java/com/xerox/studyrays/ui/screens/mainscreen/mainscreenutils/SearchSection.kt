@@ -1,11 +1,7 @@
 package com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,14 +22,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.xerox.studyrays.db.favouriteCoursesDb.FavouriteCourse
 import com.xerox.studyrays.network.ResponseTwo
 import com.xerox.studyrays.ui.screens.MainViewModel
-import com.xerox.studyrays.utils.BadgeWithCrossIcon
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SearchSection(
     vm: MainViewModel = hiltViewModel(),
-    onBatchClick: (String, String) -> Unit,
+    onBatchClick: (String, String, String, String) -> Unit,
 ) {
     val searchState by vm.search.collectAsState()
     val scope = rememberCoroutineScope()
@@ -64,7 +58,9 @@ fun SearchSection(
         }
 
         is ResponseTwo.Success -> {
-            val list = resultState.data
+            val list = remember {
+                resultState.data
+            }
             if (list.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Text(
@@ -78,26 +74,31 @@ fun SearchSection(
                 val savedStatusMap = remember { mutableStateMapOf<String, Boolean>() }
                 LazyColumn {
                     items(list) { searchItem ->
-                        val isSaved = savedStatusMap[searchItem.id] ?: false
+                        val isSaved = savedStatusMap[searchItem.batch_id] ?: false
                         EachCardForSearchItem(
                             item = searchItem,
                             isSaved = isSaved,
                             onFavouriteIconClicked = { value ->
                                 vm.onFavoriteClick(FavouriteCourse(externalId = value))
-                                savedStatusMap[searchItem.id] = !isSaved
+                                savedStatusMap[searchItem.batch_id] = !isSaved
                                 vm.showToast(
                                     context,
-                                    if (!isSaved) "${searchItem.name} added to favourites list" else "${searchItem.name} removed from favourites list"
+                                    if (!isSaved) "${searchItem.batch_name} added to favourites list" else "${searchItem.batch_name} removed from favourites list"
                                 )
                             },
                             checkIfSaved = {
                                 scope.launch {
                                     val saved =
                                         vm.checkIfItemIsPresentInDb(FavouriteCourse(it))
-                                    savedStatusMap[searchItem.id] = saved
+                                    savedStatusMap[searchItem.batch_id] = saved
                                 }
                             }) {
-                            onBatchClick(searchItem.id, searchItem.name)
+                            onBatchClick(
+                                searchItem.batch_id,
+                                searchItem.batch_name,
+                                searchItem.`class`,
+                                searchItem.batch_slug
+                            )
                         }
                     }
                 }

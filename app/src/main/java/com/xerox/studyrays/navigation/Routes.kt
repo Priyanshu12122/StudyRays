@@ -19,11 +19,15 @@ object NavRoutes{
     const val classes = "classes"
     const val pwStore = "pwStore"
     const val pdfViewerScreen = "pdfViewerScreen"
+    const val announcementsScreen = "announcementsScreen"
 
     const val eachClass = "eachClass"
     const val subjectsScreen = "subjects"
+    const val subjectsScreenOld = "subjectsScreenOld"
     const val lessonsScreen = "lessons"
+    const val lessonsScreenOld = "lessonsScreenOld"
     const val lecturesScreen = "lectures"
+    const val lecturesScreenOld = "lecturesScreenOld"
     const val videoScreen = "video"
     const val favouriteCoursesScreen = "fav_courses"
     const val khazanaScreen = "khazana"
@@ -37,6 +41,23 @@ object NavRoutes{
     const val akLessonsScreen = "akLessons"
     const val akVideosScreen = "akVideos"
     const val akVideoUScreen = "akVideosU"
+
+
+    const val keyGenerationScreen = "keyGenerationScreen"
+    const val webViewScreen = "webViewScreen"
+    const val keyTaskCompletedScreen = "keyTaskCompletedScreen"
+
+    const val updateBatchScreen = "updateBatchScreen"
+
+    const val watchLaterScreen = "watchLaterScreen"
+
+    const val videoDownloaderTaskScreen = "videoDownloaderTask"
+    const val taskCompletedScreen = "taskCompleted"
+
+//    Study focus
+    const val studyFocusSubjectDetailsScreen = "studyFocusSubjectDetailsScreen"
+    const val taskStudyFocusScreen = "taskStudyFocusScreen"
+    const val sessionScreen = "sessionScreen"
 }
 
 object NavGraphRoutes{

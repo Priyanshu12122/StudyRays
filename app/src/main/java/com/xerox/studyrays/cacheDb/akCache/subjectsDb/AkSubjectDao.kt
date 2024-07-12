@@ -12,4 +12,8 @@ interface AkSubjectDao {
 
     @Query("SELECT * FROM AKSUBJECTENTITY WHERE ID = :id")
     suspend fun getById(id: Int): AkSubjectEntity?
+
+    @Query("SELECT * FROM AKSUBJECTENTITY")
+    suspend fun getAll(): List<AkSubjectEntity>?
+
 }

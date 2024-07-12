@@ -29,6 +29,7 @@ import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn2
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -99,37 +100,44 @@ fun KhazanaChaptersScreen(
             }
 
             is Response.Success -> {
-                Column(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize()
-                ) {
 
-                    PullToRefreshLazyColumn2(
-                        items = result.data.sortedBy { it.name },
-                        content = {
-                            EachCardForKhazanaChapter(item = it) {
-                                onClick(
-                                    it.subjectId,
-                                    it.chapter_id,
-                                    it.external_id,
-                                    it.name
-                                )
+                if (result.data.isEmpty()){
+                    NoFilesFoundScreen()
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .padding(paddingValues)
+                            .fillMaxSize()
+                    ) {
+
+                        PullToRefreshLazyColumn2(
+                            items = result.data.sortedBy { it.name },
+                            content = {
+                                EachCardForKhazanaChapter(item = it) {
+                                    onClick(
+                                        it.subjectId,
+                                        it.chapter_id,
+                                        it.external_id,
+                                        it.name
+                                    )
+                                }
+                            },
+                            isRefreshing = vm.isRefreshing,
+                            imageUrl = imageUrl,
+                            courseName = courseName,
+                            onRefresh = {
+                                vm.refreshKhazanaChapters(
+                                    subjectId = subjectId,
+                                    chapterId = chapterId
+                                ) {
+                                    vm.showSnackBar(snackBarHostState)
+                                }
                             }
-                        },
-                        isRefreshing = vm.isRefreshing,
-                        imageUrl = imageUrl,
-                        courseName = courseName,
-                        onRefresh = {
-                            vm.refreshKhazanaChapters(
-                                subjectId = subjectId,
-                                chapterId = chapterId
-                            ) {
-                                vm.showSnackBar(snackBarHostState)
-                            }
-                        }
-                    )
+                        )
+                    }
+
                 }
+
             }
         }
     }

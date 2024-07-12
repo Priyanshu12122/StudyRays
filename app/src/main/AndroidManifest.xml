@@ -3,30 +3,31 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".BaseApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:windowSoftInputMode="adjustResize"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.StudyRays"
+        android:theme="@style/Theme.MyApp"
+        android:windowSoftInputMode="adjustResize"
         tools:targetApi="31">
 
         <activity
-            android:configChanges="orientation|screenSize"
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.MyApp">
@@ -37,13 +38,21 @@
             </intent-filter>
 
             <intent-filter>
-                <data android:host="studyrays.site"
-                    android:scheme="https"/>
+                <data
+                    android:host="extractapi.xyz"
+                    android:scheme="https" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <action android:name="android.intent.action.VIEW" />
             </intent-filter>
+
         </activity>
+
+        <service
+            android:name=".ui.studyfocus.sessionScreen.StudySessionTimerService"
+            android:exported="false"/>
 
         <provider
             android:name="androidx.startup.InitializationProvider"
@@ -57,16 +66,17 @@
                 <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".alarmManager.AlarmReceiver" />
 
-        <service android:name=".videoDownloader.DemoDownloadService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync">
-            <!-- This is needed for Scheduler -->
-<!--            <intent-filter>-->
-<!--                <action android:name="androidx.media3.exoplayer.downloadService.action.RESTART"/>-->
-<!--                <category android:name="android.intent.category.DEFAULT"/>-->
-<!--            </intent-filter>-->
-        </service>
+        <receiver
+            android:name=".alarmManager.BootCompletedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.REBOOT" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
 
 
     </application>

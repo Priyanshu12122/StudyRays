@@ -12,4 +12,7 @@ interface PwVideoDao {
 
     @Query("SELECT * FROM PwVideoEntity WHERE slug = :slug")
     suspend fun getById(slug: String): PwVideoEntity?
+
+    @Query("SELECT * FROM PwVideoEntity")
+    suspend fun getAll(): List<PwVideoEntity>?
 }

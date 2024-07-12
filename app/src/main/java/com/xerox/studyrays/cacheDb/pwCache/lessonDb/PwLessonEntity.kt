@@ -5,8 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class PwLessonEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int? = null,
+    @PrimaryKey
+    val id: String,
     val subjectId: String,
     val name: String,
     val notes: String,

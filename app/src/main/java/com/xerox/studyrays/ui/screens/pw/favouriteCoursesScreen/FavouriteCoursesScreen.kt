@@ -135,6 +135,7 @@ fun FavouriteCoursesScreen(
                                 DataNotFoundScreen(
                                     errorMsg = subjects.msg,
                                     state = messageState,
+                                    paddingValues = it,
                                     shouldShowBackButton = true,
                                     onRetryClicked = {
                                         processFavCourses(vm = vm, favCoursesId = favCoursesId)
@@ -158,7 +159,7 @@ fun FavouriteCoursesScreen(
 
                                     val composition by rememberLottieComposition(
                                         spec = LottieCompositionSpec.RawRes(
-                                            R.raw.datanotfound
+                                            R.raw.comingsoon
                                         )
                                     )
 
@@ -166,7 +167,7 @@ fun FavouriteCoursesScreen(
                                         composition = composition,
                                         iterations = LottieConstants.IterateForever,
                                         modifier = Modifier
-                                            .size(300.dp)
+                                            .size(250.dp)
                                     )
 
                                     Spacer(modifier = Modifier.height(16.dp))
@@ -207,7 +208,7 @@ fun FavouriteCoursesScreen(
                                         LazyColumn {
                                             items(list) { batchItem ->
                                                 val isSaved =
-                                                    savedStatusMap[batchItem?.external_id] ?: false
+                                                    savedStatusMap[batchItem?.externalId] ?: false
 
                                                 if (batchItem != null) {
 //                                vm.checkIfItemIsPresent(FavouriteCourse(batchItem.external_id))
@@ -220,7 +221,7 @@ fun FavouriteCoursesScreen(
                                                                     externalId = value
                                                                 )
                                                             )
-                                                            savedStatusMap[batchItem.external_id] =
+                                                            savedStatusMap[batchItem.externalId] =
                                                                 !isSaved
                                                             vm.showToast(
                                                                 context,
@@ -234,14 +235,14 @@ fun FavouriteCoursesScreen(
                                                                     vm.checkIfItemIsPresentInDb(
                                                                         FavouriteCourse(it)
                                                                     )
-                                                                savedStatusMap[batchItem.external_id] =
+                                                                savedStatusMap[batchItem.externalId] =
                                                                     saved
                                                             }
                                                         }
                                                     ) {
                                                         onCLick(
-                                                            batchItem.external_id,
-                                                            batchItem.name
+                                                            batchItem.externalId,
+                                                            batchItem.name ?: "Name"
                                                         )
                                                     }
                                                 }

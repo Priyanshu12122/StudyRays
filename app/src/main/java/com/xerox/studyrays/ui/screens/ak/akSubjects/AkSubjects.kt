@@ -2,12 +2,9 @@ package com.xerox.studyrays.ui.screens.ak.akSubjects
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,22 +21,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.stevdzasan.messagebar.rememberMessageBarState
-import com.xerox.studyrays.R
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.ak.AkViewModel
 import com.xerox.studyrays.ui.screens.pw.subjectsAndTeachersScreen.EachCardForSubject
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyVerticalGrid
 
 
@@ -109,21 +100,7 @@ fun AkSubjects(
                 ) {
 
                     if (result.data.data.batch_subject.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            val composition by rememberLottieComposition(
-                                spec = LottieCompositionSpec.RawRes(
-                                    if (isSystemInDarkTheme()) R.raw.comingsoondarkmode else R.raw.comingsoon
-                                )
-                            )
-
-                            LottieAnimation(
-                                composition = composition,
-                                iterations = LottieConstants.IterateForever,
-                                modifier = Modifier
-                                    .size(300.dp)
-                                    .align(Alignment.Center)
-                            )
-                        }
+                        NoFilesFoundScreen()
                     } else {
 
                         PullToRefreshLazyVerticalGrid(
@@ -138,26 +115,12 @@ fun AkSubjects(
                             },
                             isRefreshing = vm.isRefreshing,
                             onRefresh = {
-                                vm.refreshAkSubjects(id = bid){
+                                vm.refreshAkSubjects(id = bid) {
                                     vm.showSnackBar(snackBarHostState)
                                 }
                             },
                             gridCells = 3
                         )
-//                        LazyVerticalGrid(
-//                            columns = GridCells.Fixed(3)
-//                        ) {
-//
-//                            items(result.data.data.batch_subject) {
-//
-//                                EachCardForSubject(
-//                                    imageUrl = "https://i.ibb.co/r6812HL/Physics.png",
-//                                    text = it.subjectName
-//                                ) {
-//                                    onClick(it.id, bid)
-//                                }
-//                            }
-//                        }
 
                     }
 

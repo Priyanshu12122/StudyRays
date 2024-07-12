@@ -12,4 +12,7 @@ interface AkVideoDao {
 
     @Query("SELECT * FROM akvideoentity WHERE tid = :tid")
     suspend fun getById(tid: Int): AkVideoEntity?
+
+    @Query("SELECT * FROM AkVideoEntity")
+    suspend fun getAll(): List<AkVideoEntity>?
 }

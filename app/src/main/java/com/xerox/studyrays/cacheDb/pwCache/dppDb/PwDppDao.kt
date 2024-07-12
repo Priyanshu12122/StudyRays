@@ -12,4 +12,7 @@ interface PwDppDao {
 
     @Query("SELECT * FROM PwDppEntity WHERE slug = :slug")
     suspend fun getById(slug: String): List<PwDppEntity>?
+
+    @Query("SELECT * FROM PwDppEntity")
+    suspend fun getAll(): List<PwDppEntity>?
 }

@@ -9,12 +9,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.xerox.studyrays.ui.screens.khazana.khazanaSubjectsScreen.CardForTeacherInKhazanaChapter
@@ -26,6 +28,7 @@ fun <T> PullToRefreshLazyColumn(
     content: @Composable (T) -> Unit,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
+    item: @Composable (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     pullToRefreshState: PullToRefreshState = rememberPullToRefreshState(),
     lazyListState: LazyListState = rememberLazyListState()
@@ -40,7 +43,14 @@ fun <T> PullToRefreshLazyColumn(
             modifier = Modifier
                 .fillMaxSize(),
         ) {
+
+                if (item != null) {
+                    item {
+                        item()
+                    }
+            }
             items(items) {
+
                 content(it)
             }
         }
@@ -62,7 +72,8 @@ fun <T> PullToRefreshLazyColumn(
         PullToRefreshContainer(
             state = pullToRefreshState,
             modifier = Modifier
-                .align(Alignment.TopCenter)
+                .align(Alignment.TopCenter),
+            containerColor = if (!isRefreshing) Color.Transparent else PullToRefreshDefaults.containerColor
         )
     }
 }
@@ -120,6 +131,7 @@ fun <T> PullToRefreshLazyColumn2(
             state = pullToRefreshState,
             modifier = Modifier
                 .align(Alignment.TopCenter),
+            containerColor = if (!isRefreshing) Color.Transparent else PullToRefreshDefaults.containerColor
         )
     }
 }

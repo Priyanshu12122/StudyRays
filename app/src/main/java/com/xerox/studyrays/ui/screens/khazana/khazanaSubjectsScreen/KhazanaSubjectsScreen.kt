@@ -5,8 +5,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,6 +29,7 @@ import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -82,6 +81,7 @@ fun KhazanaSubjectsScreen(
 
                 DataNotFoundScreen(
                     errorMsg = result.msg,
+                    paddingValues = it,
                     state = messageState,
                     shouldShowBackButton = true,
                     onRetryClicked = {
@@ -97,26 +97,33 @@ fun KhazanaSubjectsScreen(
             }
 
             is Response.Success -> {
-                Column(
-                    modifier = Modifier
-                        .padding(it)
-                        .fillMaxSize()
-                ) {
 
-                    PullToRefreshLazyColumn(
-                        items = result.data,
-                        content = { subjectItem ->
-                            CardForKhazanaSubject(item = subjectItem) {
-                                onClick(subjectItem.name, subjectItem.id)
-                            }
-                        },
-                        isRefreshing = vm.isRefreshing,
-                        onRefresh = {
-                            vm.refreshKhazanaSubjects(slug){
-                                vm.showSnackBar(snackBarHostState)
-                            }
-                        })
+                if (result.data.isEmpty()) {
+                    NoFilesFoundScreen()
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .padding(it)
+                            .fillMaxSize()
+                    ) {
+
+                        PullToRefreshLazyColumn(
+                            items = result.data,
+                            content = { subjectItem ->
+                                CardForKhazanaSubject(item = subjectItem) {
+                                    onClick(subjectItem.name, subjectItem.id)
+                                }
+                            },
+                            isRefreshing = vm.isRefreshing,
+                            onRefresh = {
+                                vm.refreshKhazanaSubjects(slug) {
+                                    vm.showSnackBar(snackBarHostState)
+                                }
+                            })
+                    }
+
                 }
+
             }
         }
     }

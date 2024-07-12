@@ -12,4 +12,8 @@ interface PwNotesDao {
 
     @Query("SELECT * FROM PwNotesEntity WHERE slug = :slug")
     suspend fun getById(slug: String): List<PwNotesEntity>?
+
+    @Query("SELECT * FROM PwNotesEntity")
+    suspend fun getAll(): List<PwNotesEntity>?
+
 }

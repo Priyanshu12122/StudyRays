@@ -1,5 +1,6 @@
 package com.xerox.studyrays.di
 
+import android.app.Application
 import android.content.Context
 import androidx.room.Room
 import com.xerox.studyrays.cacheDb.akCache.NotesDb.AkNoteDao
@@ -12,6 +13,8 @@ import com.xerox.studyrays.cacheDb.akCache.subjectsDb.AkSubjectDao
 import com.xerox.studyrays.cacheDb.akCache.subjectsDb.AkSubjectDb
 import com.xerox.studyrays.cacheDb.akCache.videosDb.AkVideoDao
 import com.xerox.studyrays.cacheDb.akCache.videosDb.AkVideoDb
+import com.xerox.studyrays.cacheDb.keyGeneratorCache.KeyGenerateDao
+import com.xerox.studyrays.cacheDb.keyGeneratorCache.KeyGenerateDb
 import com.xerox.studyrays.cacheDb.khazanaCache.khazanaChaptersDb.KhazanaChaptersDao
 import com.xerox.studyrays.cacheDb.khazanaCache.khazanaChaptersDb.KhazanaChaptersDb
 import com.xerox.studyrays.cacheDb.khazanaCache.khazanaDb.KhazanaDao
@@ -36,6 +39,14 @@ import com.xerox.studyrays.cacheDb.mainScreenCache.promoDb.PromoDao
 import com.xerox.studyrays.cacheDb.mainScreenCache.promoDb.PromoDb
 import com.xerox.studyrays.cacheDb.mainScreenCache.searchSectionDb.SearchDao
 import com.xerox.studyrays.cacheDb.mainScreenCache.searchSectionDb.SearchDb
+import com.xerox.studyrays.cacheDb.pwCache.batchDetailsDb.BatchDetailsDaoo
+import com.xerox.studyrays.cacheDb.pwCache.batchDetailsDb.BatchDetailsDbb
+import com.xerox.studyrays.cacheDb.pwCache.batchDetailsDb.DppNotesDao
+import com.xerox.studyrays.cacheDb.pwCache.batchDetailsDb.DppVideoDao
+import com.xerox.studyrays.cacheDb.pwCache.batchDetailsDb.LessonDao
+import com.xerox.studyrays.cacheDb.pwCache.batchDetailsDb.NotesDao
+import com.xerox.studyrays.cacheDb.pwCache.batchDetailsDb.TimelineDao
+import com.xerox.studyrays.cacheDb.pwCache.batchDetailsDb.VideoDao
 import com.xerox.studyrays.cacheDb.pwCache.courseDb.PwCourseDao
 import com.xerox.studyrays.cacheDb.pwCache.courseDb.PwCourseDb
 import com.xerox.studyrays.cacheDb.pwCache.dppDb.PwDppDao
@@ -44,17 +55,36 @@ import com.xerox.studyrays.cacheDb.pwCache.lessonDb.PwLessonDao
 import com.xerox.studyrays.cacheDb.pwCache.lessonDb.PwLessonDb
 import com.xerox.studyrays.cacheDb.pwCache.notesDb.PwNotesDao
 import com.xerox.studyrays.cacheDb.pwCache.notesDb.PwNotesDb
+import com.xerox.studyrays.cacheDb.pwCache.subjectsAndTeachersCache.BatchDetailsDao
+import com.xerox.studyrays.cacheDb.pwCache.subjectsAndTeachersCache.BatchDetailsDb
 import com.xerox.studyrays.cacheDb.pwCache.videosDb.PwVideoDao
 import com.xerox.studyrays.cacheDb.pwCache.videosDb.PwVideoDb
 import com.xerox.studyrays.data.ApiRepository
+import com.xerox.studyrays.data.StudyFocusRepository
+import com.xerox.studyrays.db.alarmDb.AlarmDao
+import com.xerox.studyrays.db.alarmDb.AlarmDb
+import com.xerox.studyrays.db.downloadsDb.DownloadNumberDao
+import com.xerox.studyrays.db.downloadsDb.DownloadNumberDb
 import com.xerox.studyrays.db.exampleDb.ExampleDao
 import com.xerox.studyrays.db.exampleDb.ExampleDb
 import com.xerox.studyrays.db.favouriteCoursesDb.FavouriteCourseDao
 import com.xerox.studyrays.db.favouriteCoursesDb.FavouriteCourseDb
+import com.xerox.studyrays.db.keyDb.KeyDao
+import com.xerox.studyrays.db.keyDb.KeyDb
 import com.xerox.studyrays.db.khazanaFavDb.KhazanaFavDao
 import com.xerox.studyrays.db.khazanaFavDb.KhazanaFavDb
-import com.xerox.studyrays.db.videoDb.VideoDao
-import com.xerox.studyrays.db.videoDb.VideoDatabase
+import com.xerox.studyrays.db.studyFocusDb.SessionDao
+import com.xerox.studyrays.db.studyFocusDb.StudyFocusDb
+import com.xerox.studyrays.db.studyFocusDb.SubjectDao
+import com.xerox.studyrays.db.studyFocusDb.TaskDaoo
+import com.xerox.studyrays.db.taskDb.TaskDao
+import com.xerox.studyrays.db.taskDb.TaskDb
+import com.xerox.studyrays.db.videoNotesDb.VideoNoteDao
+import com.xerox.studyrays.db.videoNotesDb.VideoNoteDb
+import com.xerox.studyrays.db.videoProgress.VideoProgressDao
+import com.xerox.studyrays.db.videoProgress.VideoProgressDb
+import com.xerox.studyrays.db.watchLaterDb.WatchLaterDao
+import com.xerox.studyrays.db.watchLaterDb.WatchLaterDb
 import com.xerox.studyrays.network.ApiService
 import com.xerox.studyrays.network.EncryptedApiService
 import com.xerox.studyrays.utils.Constants.BASE_URL
@@ -72,6 +102,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object Module {
+
 
     @Provides
     @Singleton
@@ -107,7 +138,6 @@ object Module {
         api: ApiService,
         dao: FavouriteCourseDao,
         encryptedApiService: EncryptedApiService,
-        videoDao: VideoDao,
         khazanaDao: KhazanaFavDao,
         priceDao: PriceDao,
         exampleDao: ExampleDao,
@@ -132,12 +162,28 @@ object Module {
         pwDppDao: PwDppDao,
         navDao: NavDao,
         searchDao: SearchDao,
+        batchDetailsDao: BatchDetailsDao,
+        taskDao: TaskDao,
+        downloadNumberDao: DownloadNumberDao,
+        alarmDao: AlarmDao,
+        keyDao: KeyDao,
+        keyGenerateDao: KeyGenerateDao,
+        watchLaterDao: WatchLaterDao,
+        videoProgressDao: VideoProgressDao,
+        videoNoteDao: VideoNoteDao,
+        batchDetailsDaoo: BatchDetailsDaoo,
+        lessonDao: LessonDao,
+        notesDao: NotesDao,
+        videoDao: VideoDao,
+        dppNotesDao: DppNotesDao,
+        dppVideoDao: DppVideoDao,
+        timelineDao: TimelineDao,
+        @ApplicationContext context: Context,
     ): ApiRepository {
         return ApiRepository(
             api = api,
             dao = dao,
             encryptedApi = encryptedApiService,
-            videoDao = videoDao,
             khazanaDao = khazanaDao,
             priceDao = priceDao,
             exDao = exampleDao,
@@ -161,9 +207,40 @@ object Module {
             pwNotesDao = pwNotesDao,
             pwDppDao = pwDppDao,
             navDao = navDao,
-            searchDao = searchDao
+            searchDao = searchDao,
+            batchDetailsDao = batchDetailsDao,
+            taskDao = taskDao,
+            downloadNumberDao = downloadNumberDao,
+            alarmDao = alarmDao,
+            context = context,
+            keyDao = keyDao,
+            keyGenerateDao = keyGenerateDao,
+            watchLaterDao = watchLaterDao,
+            videoProgressDao = videoProgressDao,
+            videoNoteDao = videoNoteDao,
+            batchDetailsDaoo = batchDetailsDaoo,
+            lessonDao = lessonDao,
+            notesDao = notesDao,
+            videoDao = videoDao,
+            dppNotesDao = dppNotesDao,
+            dppVideoDao = dppVideoDao,
+            timelineDao = timelineDao,
         )
 
+    }
+
+    @Provides
+    @Singleton
+    fun providesStudyFocusRepository(
+        subjectDao: SubjectDao,
+        taskDao: TaskDaoo,
+        sessionDao: SessionDao,
+    ): StudyFocusRepository {
+        return StudyFocusRepository(
+            sessionDao = sessionDao,
+            subjectDao = subjectDao,
+            taskDao = taskDao,
+        )
     }
 
     @Provides
@@ -178,7 +255,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             FavouriteCourseDb::class.java,
-            "FavouritedDbbb"
+            "FavouritedDbbbbbb"
         ).build()
     }
 
@@ -195,23 +272,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             KhazanaFavDb::class.java,
-            "KhazanaDbb"
-        ).build()
-    }
-
-    @Provides
-    @Singleton
-    fun providesVideoDao(db: VideoDatabase): VideoDao {
-        return db.dao
-    }
-
-    @Provides
-    @Singleton
-    fun providesVideoDatabase(@ApplicationContext context: Context): VideoDatabase {
-        return Room.databaseBuilder(
-            context,
-            VideoDatabase::class.java,
-            "VideoDb"
+            "KhazanaDbbbb"
         ).build()
     }
 
@@ -227,7 +288,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             PriceDb::class.java,
-            "CachePriceDb"
+            "CachePriceDbbb"
         ).build()
     }
 
@@ -259,7 +320,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             PromoDb::class.java,
-            "Promo cache db"
+            "Promo cache dbb"
         ).build()
     }
 
@@ -275,7 +336,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             IndexDb::class.java,
-            "Ak Index cache db"
+            "Ak Index cache dbb"
         ).build()
     }
 
@@ -291,7 +352,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             KhazanaDb::class.java,
-            "Khazana cache db"
+            "Khazana cache dbb"
         ).build()
     }
 
@@ -307,7 +368,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             KhazanaSubjectDb::class.java,
-            "Khazana Subject cache dbb"
+            "Khazana Subject cache dbbb"
         ).build()
     }
 
@@ -323,7 +384,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             KhazanaTeachersDb::class.java,
-            "Khazana Teacher cache dbb"
+            "Khazana Teacher cache dbbb"
         ).build()
     }
 
@@ -339,7 +400,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             KhazanaChaptersDb::class.java,
-            "Khazana Chapter cache db"
+            "Khazana Chapter cache dbb"
         ).build()
     }
 
@@ -355,7 +416,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             KhazanaLecturesDb::class.java,
-            "Khazana Lectures cache dbb"
+            "Khazana Lectures cache dbbb"
         ).build()
     }
 
@@ -371,7 +432,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             KhazanaNotesDb::class.java,
-            "Khazana Notes cache db"
+            "Khazana Notes cache dbb"
         ).build()
     }
 
@@ -387,7 +448,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             KhazanaDppDb::class.java,
-            "Khazana Dpp cache db"
+            "Khazana Dpp cache dbb"
         ).build()
     }
 
@@ -403,7 +464,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             KhazanaDppLecturesDb::class.java,
-            "Khazana Dpp Lectures cache db"
+            "Khazana Dpp Lectures cache dbb"
         ).build()
     }
 
@@ -419,7 +480,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             AkSubjectDb::class.java,
-            "Ak subjects cache db"
+            "Ak subjects cache dbb"
         ).build()
     }
 
@@ -435,7 +496,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             AkLessonDb::class.java,
-            "Ak lesson cache dbb"
+            "Ak lesson cache dbbb"
         ).build()
     }
 
@@ -451,7 +512,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             AkVideoDb::class.java,
-            "Ak video cache db"
+            "Ak video cache dbb"
         ).build()
     }
 
@@ -467,7 +528,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             AkNoteDb::class.java,
-            "Ak note cache db"
+            "Ak note cache dbb"
         ).build()
     }
 
@@ -483,7 +544,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             PwCourseDb::class.java,
-            "Pw course cache db"
+            "Pw course cache dbbbb"
         ).build()
     }
 
@@ -499,7 +560,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             PwLessonDb::class.java,
-            "Pw lesson cache dbbb"
+            "Pw lesson cache dbbbbb"
         ).build()
     }
 
@@ -515,7 +576,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             PwVideoDb::class.java,
-            "Pw video cache db"
+            "Pw video cache dbb"
         ).build()
     }
 
@@ -531,7 +592,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             PwNotesDb::class.java,
-            "Pw note cache db"
+            "Pw note cache dbb"
         ).build()
     }
 
@@ -547,7 +608,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             PwDppDb::class.java,
-            "Pw dpp cache db"
+            "Pw dpp cache dbb"
         ).build()
     }
 
@@ -563,7 +624,7 @@ object Module {
         return Room.databaseBuilder(
             context,
             NavDb::class.java,
-            "Nav cache db"
+            "Nav cache dbb"
         ).build()
     }
 
@@ -579,8 +640,245 @@ object Module {
         return Room.databaseBuilder(
             context,
             SearchDb::class.java,
-            "Search cache db"
+            "Search cache dbb"
         ).build()
     }
+
+    @Provides
+    @Singleton
+    fun providesBatchDetailsDao(db: BatchDetailsDb): BatchDetailsDao {
+        return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun providesBatchDetailsDatabase(@ApplicationContext context: Context): BatchDetailsDb {
+        return Room.databaseBuilder(
+            context,
+            BatchDetailsDb::class.java,
+            "Batch details cache dbbbbbbbbbb"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesTaskDao(db: TaskDb): TaskDao {
+        return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun providesTaskDatabase(@ApplicationContext context: Context): TaskDb {
+        return Room.databaseBuilder(
+            context,
+            TaskDb::class.java,
+            "Task Dbb"
+        ).build()
+    }
+
+
+    @Provides
+    @Singleton
+    fun providesDownloadNumberDao(db: DownloadNumberDb): DownloadNumberDao {
+        return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun providesDownloadNumberDatabase(@ApplicationContext context: Context): DownloadNumberDb {
+        return Room.databaseBuilder(
+            context,
+            DownloadNumberDb::class.java,
+            "Downloadd Dbb"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesAlarmDao(db: AlarmDb): AlarmDao {
+        return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun providesAlarmDatabase(@ApplicationContext context: Context): AlarmDb {
+        return Room.databaseBuilder(
+            context,
+            AlarmDb::class.java,
+            "Alarm Dbb"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesKeyDao(db: KeyDb): KeyDao {
+        return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun providesKeyDatabase(@ApplicationContext context: Context): KeyDb {
+        return Room.databaseBuilder(
+            context,
+            KeyDb::class.java,
+            "Key Dbb"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesKeyGenerateDao(db: KeyGenerateDb): KeyGenerateDao {
+        return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun providesKeyGenerateDatabase(@ApplicationContext context: Context): KeyGenerateDb {
+        return Room.databaseBuilder(
+            context,
+            KeyGenerateDb::class.java,
+            "Key Generate Db"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesWatchLaterDao(db: WatchLaterDb): WatchLaterDao {
+        return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun providesWatchLaterDatabase(@ApplicationContext context: Context): WatchLaterDb {
+        return Room.databaseBuilder(
+            context,
+            WatchLaterDb::class.java,
+            "Watch later Dbbb"
+        ).build()
+    }
+
+
+    @Provides
+    @Singleton
+    fun providesVideoProgressDao(db: VideoProgressDb): VideoProgressDao {
+        return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun providesVideoProgressDatabase(@ApplicationContext context: Context): VideoProgressDb {
+        return Room.databaseBuilder(
+            context,
+            VideoProgressDb::class.java,
+            "Video Progress Dbbb"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesVideoNoteDao(db: VideoNoteDb): VideoNoteDao {
+        return db.dao
+    }
+
+    @Provides
+    @Singleton
+    fun providesVideoNoteDatabase(@ApplicationContext context: Context): VideoNoteDb {
+        return Room.databaseBuilder(
+            context,
+            VideoNoteDb::class.java,
+            "Video Note Db"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesBatchDetailsDaoo(db: BatchDetailsDbb): BatchDetailsDaoo {
+        return db.batchDetailsDao
+    }
+
+    @Provides
+    @Singleton
+    fun providesLessonsDaoo(db: BatchDetailsDbb): LessonDao {
+        return db.lessonsDao
+    }
+
+    @Provides
+    @Singleton
+    fun providesDppNotesDaoo(db: BatchDetailsDbb): DppNotesDao {
+        return db.dppNotesDao
+    }
+
+    @Provides
+    @Singleton
+    fun providesDppVideosDaoo(db: BatchDetailsDbb): DppVideoDao {
+        return db.dppVideoDao
+    }
+
+    @Provides
+    @Singleton
+    fun providesNotesDaoo(db: BatchDetailsDbb): NotesDao {
+        return db.notesDao
+    }
+
+    @Provides
+    @Singleton
+    fun providesVideoDaoo(db: BatchDetailsDbb): VideoDao {
+        return db.videoDao
+    }
+
+    @Provides
+    @Singleton
+    fun providesTimelineDaoo(db: BatchDetailsDbb): TimelineDao {
+        return db.timelineDao
+    }
+
+    @Provides
+    @Singleton
+    fun providesBatchDetailsDatabasee(@ApplicationContext context: Context): BatchDetailsDbb {
+        return Room.databaseBuilder(
+            context,
+            BatchDetailsDbb::class.java,
+            "BatchDetails ddbbbbb"
+        ).build()
+    }
+
+
+
+
+
+//    Study focus
+
+    @Provides
+    @Singleton
+    fun provideDatabase(
+        application: Application
+    ): StudyFocusDb {
+        return Room
+            .databaseBuilder(
+                application,
+                StudyFocusDb::class.java,
+                "study focus .db"
+            )
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSubjectDao(database: StudyFocusDb): SubjectDao {
+        return database.subjectDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTaskDaoDao(database: StudyFocusDb): TaskDaoo {
+        return database.taskDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSessionDao(database: StudyFocusDb): SessionDao {
+        return database.sessionDao()
+    }
+
 
 }

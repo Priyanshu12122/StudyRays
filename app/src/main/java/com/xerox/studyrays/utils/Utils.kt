@@ -39,6 +39,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
@@ -52,6 +53,8 @@ import java.util.Calendar
 import java.util.Currency
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
+import java.util.concurrent.TimeUnit
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
@@ -61,7 +64,7 @@ fun navigateTo(navController: NavHostController, route: String) {
         popUpTo(0) {
             inclusive = true
         }
-        launchSingleTop = true
+//        launchSingleTop = true
     }
 }
 
@@ -70,6 +73,16 @@ fun navigateTo2(navController: NavHostController, route: String) {
         popUpTo(route)
     }
 }
+
+fun navigateTo3(navController: NavHostController, route: String) {
+    navController.navigate(route) {
+        popUpTo(route){
+            inclusive = true
+        }
+    }
+}
+
+
 
 data class EachCardForClass(
     val image: Int,
@@ -122,7 +135,7 @@ fun CategoryTabRow2(
             Tab(selected = pagerState.currentPage == index, onClick = { onTabClicked(index) }) {
                 Text(
                     text = category,
-                    modifier = Modifier.padding(horizontal = 2.dp, vertical = 8.dp)
+                    modifier = modifier.padding(horizontal = 2.dp, vertical = 8.dp)
                 )
             }
         }
@@ -133,9 +146,9 @@ fun CategoryTabRow2(
 @Composable
 fun CategoryTabRow3(
     pagerState: PagerState,
-    categories: List<String>,
+    categories: List<ImageVector>,
     modifier: Modifier = Modifier,
-    onPageClick: @Composable (Int) -> Unit,
+//    onPageClick: @Composable (Int) -> Unit,
     onTabClicked: (Int) -> Unit,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -145,18 +158,19 @@ fun CategoryTabRow3(
             categories.forEachIndexed { index, category ->
 
                 Tab(selected = pagerState.currentPage == index, onClick = { onTabClicked(index) }) {
-                    Text(
-                        text = category,
+                    Icon(
+                        imageVector = category,
+                        contentDescription = "",
                         modifier = Modifier.padding(horizontal = 2.dp, vertical = 8.dp)
                     )
                 }
             }
         }
 
-        HorizontalPager(state = pagerState) {
-            onPageClick(it)
-
-        }
+//        HorizontalPager(state = pagerState) {
+//            onPageClick(it)
+//
+//        }
 
     }
 }
@@ -262,6 +276,39 @@ fun BadgeWithCrossIcon(text: String,modifier: Modifier = Modifier,onClick: (Stri
                 )
             }
         }
+    }
+}
+
+fun String.toTimeAgo(): String {
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+    dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+    val date = dateFormat.parse(this)
+    val now = Date()
+    val duration = now.time - date.time
+
+    val days = TimeUnit.MILLISECONDS.toDays(duration)
+    val hours = TimeUnit.MILLISECONDS.toHours(duration)
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(duration)
+
+    return when {
+        days > 30 -> {
+            val months = days / 30
+            if (months == 1L) "1 month ago" else "$months months ago"
+        }
+        days > 7 -> {
+            val weeks = days / 7
+            if (weeks == 1L) "1 week ago" else "$weeks weeks ago"
+        }
+        days > 0 -> {
+            if (days == 1L) "1 day ago" else "$days days ago"
+        }
+        hours > 0 -> {
+            if (hours == 1L) "1 hour ago" else "$hours hours ago"
+        }
+        minutes > 0 -> {
+            if (minutes == 1L) "1 minute ago" else "$minutes minutes ago"
+        }
+        else -> "Just now"
     }
 }
 

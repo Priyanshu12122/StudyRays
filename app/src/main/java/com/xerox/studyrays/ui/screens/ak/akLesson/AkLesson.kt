@@ -7,7 +7,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -48,17 +46,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.stevdzasan.messagebar.rememberMessageBarState
-import com.xerox.studyrays.R
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.ak.AkViewModel
 import com.xerox.studyrays.ui.theme.MainPurple
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -133,21 +127,7 @@ fun AkLesson(
                 ) {
 
                     if (result.data.data.batch_topic.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            val composition by rememberLottieComposition(
-                                spec = LottieCompositionSpec.RawRes(
-                                    if (isSystemInDarkTheme()) R.raw.comingsoondarkmode else R.raw.comingsoon
-                                )
-                            )
-
-                            LottieAnimation(
-                                composition = composition,
-                                iterations = LottieConstants.IterateForever,
-                                modifier = Modifier
-                                    .size(300.dp)
-                                    .align(Alignment.Center)
-                            )
-                        }
+                        NoFilesFoundScreen()
                     } else {
 
                         PullToRefreshLazyColumn(
@@ -173,22 +153,6 @@ fun AkLesson(
                                 }
                             })
 
-//                        LazyColumn {
-//                            items(result.data.data.batch_topic) {
-//                                EachCardForAkLessons(
-//                                    lessonName = it.topicName,
-//                                    classes = it.clsCount.toString()
-//                                ) {
-//
-//                                    onClick(
-//                                        result.data.data.batch_detail.subjectId,
-//                                        it.id,
-//                                        result.data.data.batch_detail.batchId
-//                                    )
-//
-//                                }
-//                            }
-//                        }
                     }
 
 

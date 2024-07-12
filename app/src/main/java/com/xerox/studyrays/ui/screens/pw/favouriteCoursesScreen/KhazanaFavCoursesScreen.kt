@@ -99,7 +99,7 @@ fun KhazanaFavCoursesScreen(
 
                     val composition by rememberLottieComposition(
                         spec = LottieCompositionSpec.RawRes(
-                            R.raw.datanotfound
+                            R.raw.comingsoon
                         )
                     )
 
@@ -107,7 +107,7 @@ fun KhazanaFavCoursesScreen(
                         composition = composition,
                         iterations = LottieConstants.IterateForever,
                         modifier = Modifier
-                            .size(300.dp)
+                            .size(250.dp)
                     )
 
                     SpacerHeight(dp = 16.dp)

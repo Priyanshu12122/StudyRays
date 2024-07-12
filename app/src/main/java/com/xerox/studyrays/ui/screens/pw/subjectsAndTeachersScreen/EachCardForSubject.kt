@@ -32,13 +32,14 @@ import coil.compose.AsyncImage
 
 @Composable
 fun EachCardForSubject(
+    modifier: Modifier = Modifier,
     imageUrl: String?,
     text: String,
     onClick: () -> Unit
 ) {
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(10.dp)
             .height(120.dp)
             .width(80.dp)

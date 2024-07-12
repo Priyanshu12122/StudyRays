@@ -11,4 +11,7 @@ interface AkNoteDao {
 
     @Query("SELECT * FROM AkNotesEntity WHERE tid = :tid")
     suspend fun getById(tid: Int): AkNotesEntity?
+
+    @Query("SELECT * FROM AkNotesEntity")
+    suspend fun getAll(): List<AkNotesEntity>?
 }

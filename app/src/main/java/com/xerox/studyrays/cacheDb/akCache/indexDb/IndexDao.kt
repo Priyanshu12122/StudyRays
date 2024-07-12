@@ -12,4 +12,7 @@ interface IndexDao {
 
     @Query("SELECT * FROM indexentity WHERE id = :id")
     suspend fun getIndexString(id: Int): IndexEntity?
+
+    @Query("SELECT * FROM IndexEntity")
+    suspend fun getAll(): List<IndexEntity>?
 }

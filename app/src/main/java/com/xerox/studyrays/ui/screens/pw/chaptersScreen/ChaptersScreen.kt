@@ -27,20 +27,22 @@ import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChaptersScreen(
     vm: MainViewModel = hiltViewModel(),
-    subjectId: String,
+    batchId: String,
+    subjectSlug: String,
     subject: String,
     onBackClicked: () -> Unit,
     onClick: (String, String) -> Unit,
 ) {
 
     LaunchedEffect(key1 = Unit) {
-        vm.getAllLessons(subjectId)
+        vm.getAllLessons(batchId = batchId, subjectSlug = subjectSlug)
     }
 
     val state by vm.lessons.collectAsState()
@@ -54,7 +56,7 @@ fun ChaptersScreen(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = {
-                       SnackbarHost(snackbarHostState)
+            SnackbarHost(snackbarHostState)
         },
         topBar = {
             TopAppBar(
@@ -79,10 +81,11 @@ fun ChaptersScreen(
 
                 DataNotFoundScreen(
                     errorMsg = result.msg,
+                    paddingValues = paddingValues,
                     state = messageState,
                     shouldShowBackButton = true,
                     onRetryClicked = {
-                        vm.getAllLessons(subjectId)
+                        vm.getAllLessons(batchId = batchId, subjectSlug = subjectSlug)
                     }) {
                     onBackClicked()
                 }
@@ -93,47 +96,43 @@ fun ChaptersScreen(
             }
 
             is Response.Success -> {
-                Column(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize()
-                ) {
 
-                    PullToRefreshLazyColumn(
-                        items = result.data,
-                        content = {
-                            EachCardForChapters(
-                                lessonName = it.name,
-                                notes = it.notes,
-                                exercises = it.exercises,
-                                videos = it.videos
-                            ) {
-                                onClick(it.slug, it.name)
-                            }
-                        },
-                        isRefreshing = vm.isRefreshing,
-                        onRefresh = {
-                            vm.refreshAllLessons(subjectId) {
-                                vm.showSnackBar(snackbarHostState)
-                            }
-                        })
-//                    LazyColumn {
-//                        items(result.data) {
-//                            EachCardForChapters(
-//                                lessonName = it.name,
-//                                notes = it.notes,
-//                                exercises = it.exercises,
-//                                videos = it.videos
-//                            ) {
-//                                onClick(it.slug, it.name)
-//                            }
-//                        }
-//                    }
+                val list = remember { result.data.sortedBy { it.id } }
+
+                if (list.isEmpty()) {
+                    NoFilesFoundScreen()
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .padding(paddingValues)
+                            .fillMaxSize()
+                    ) {
+
+                        PullToRefreshLazyColumn(
+                            items = list,
+                            content = {
+                                EachCardForChapters(
+                                    lessonName = it.name,
+                                    notes = it.notes.toString(),
+                                    exercises = it.exercises.toString(),
+                                    videos = it.videos.toString()
+                                ) {
+                                    onClick(it.slug, it.name)
+                                }
+                            },
+                            isRefreshing = vm.isRefreshing,
+                            onRefresh = {
+                                vm.refreshAllLessons(batchId = batchId, subjectSlug = subjectSlug) {
+                                    vm.showSnackBar(snackbarHostState)
+                                }
+                            })
+
+                    }
 
                 }
+
             }
 
-            else -> {}
         }
     }
 

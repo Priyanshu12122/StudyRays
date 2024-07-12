@@ -12,4 +12,8 @@ interface KhazanaDppLecturesDao {
 
     @Query("SELECT * FROM khazanadpplecturesentity WHERE topicName = :topicName")
     suspend fun getById(topicName: String): KhazanaDppLecturesEntity?
+
+    @Query("SELECT * FROM KhazanaDppLecturesEntity")
+    suspend fun getAll(): List<KhazanaDppLecturesEntity>?
+
 }

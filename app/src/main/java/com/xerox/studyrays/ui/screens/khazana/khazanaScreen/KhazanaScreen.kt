@@ -21,7 +21,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -31,8 +30,8 @@ import com.xerox.studyrays.network.ResponseTwo
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyVerticalGrid
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,39 +114,38 @@ fun KhazanaScreen(
             }
 
             is ResponseTwo.Success -> {
-                val list = result.data.sortedBy { it.showorder }
 
-                Column(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                if (result.data.isEmpty()){
+                    NoFilesFoundScreen()
+                } else {
+                    val list = result.data.sortedBy { it.showorder }
+                    Column(
+                        modifier = Modifier
+                            .padding(paddingValues)
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
 
-                    PullToRefreshLazyVerticalGrid(
-                        items = list,
-                        content = {
-                            EachCardForKhazana(item = it) {
-                                onClick(it.slug)
-                            }
-                        },
-                        isRefreshing = vm.isRefreshing,
-                        gridCells = 2,
-                        onRefresh = {
-                            vm.refreshKhazana(onComplete = {
-                                vm.showSnackBar(snackBarHostState)
+                        PullToRefreshLazyVerticalGrid(
+                            items = list,
+                            content = {
+                                EachCardForKhazana(item = it) {
+                                    onClick(it.slug)
+                                }
+                            },
+                            isRefreshing = vm.isRefreshing,
+                            gridCells = 2,
+                            onRefresh = {
+                                vm.refreshKhazana(onComplete = {
+                                    vm.showSnackBar(snackBarHostState)
+                                })
                             })
-                        })
+                    }
 
-//                    LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-//                        items(list) {
-//                            EachCardForKhazana(item = it) {
-//                                onClick(it.slug)
-//                            }
-//                        }
-//                    }
                 }
+
+
             }
         }
     }

@@ -10,6 +10,9 @@ interface PwCourseDao {
     @Upsert
     suspend fun insert(item: PwCourseEntity)
 
-    @Query("SELECT * FROM PwCourseEntity WHERE classValue = :classValue")
-    suspend fun getById(classValue: String): List<PwCourseEntity>?
+    @Query("SELECT * FROM PwCourseEntity WHERE queryClassValue = :classValue AND isOld = :isOld")
+    suspend fun getById(classValue: String, isOld: Boolean): List<PwCourseEntity>?
+
+    @Query("SELECT * FROM PwCourseEntity")
+    suspend fun getAll(): List<PwCourseEntity>?
 }

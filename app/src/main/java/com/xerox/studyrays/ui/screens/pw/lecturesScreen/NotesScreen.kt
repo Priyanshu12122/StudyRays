@@ -1,5 +1,6 @@
 package com.xerox.studyrays.ui.screens.pw.lecturesScreen
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -26,10 +25,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -45,90 +49,106 @@ import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
+import com.xerox.studyrays.utils.SearchTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesScreen(
     vm: MainViewModel = hiltViewModel(),
-    slug: String,
-    paddingValues: PaddingValues,
+    topicSlug: String,
+    subjectSlug: String,
+    batchId: String,
     snackbarHostState: SnackbarHostState,
+    paddingValues: PaddingValues,
     onPdfViewClicked: (String, String) -> Unit,
     onPdfDownloadClicked: (String?, String?) -> Unit,
 ) {
 
     LaunchedEffect(key1 = Unit) {
-        vm.getAllNotes(slug)
+        vm.getAllNotes(
+            batchId = batchId,
+            subjectSlug = subjectSlug,
+            topicSlug = topicSlug
+        )
+
+        Log.d("TAG", "NotesScreen: $batchId  $subjectSlug  $topicSlug")
     }
 
     val state by vm.notes.collectAsState()
     val notesResult = state
-
+    var searchText by rememberSaveable { mutableStateOf("") }
     Column(modifier = Modifier.fillMaxSize()) {
         when (notesResult) {
             is Response.Error -> {
 
                 val messageState = rememberMessageBarState()
                 DataNotFoundScreen(
-                    paddingValues = paddingValues,
                     errorMsg = notesResult.msg,
                     state = messageState,
+                    paddingValues = paddingValues,
                     shouldShowBackButton = false,
                     onRetryClicked = {
-                        vm.getAllNotes(slug)
+                        vm.getAllNotes(
+                            batchId = batchId,
+                            subjectSlug = subjectSlug,
+                            topicSlug = topicSlug
+                        )
                     }) {
                 }
 
             }
 
             is Response.Loading -> {
-                LoadingScreen(paddingValues = paddingValues)
+                LoadingScreen(paddingValues = PaddingValues())
 
             }
 
             is Response.Success -> {
 
                 if (notesResult.data.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        val composition by rememberLottieComposition(
-                            spec = LottieCompositionSpec.RawRes(
-                                if (isSystemInDarkTheme()) R.raw.comingsoondarkmode else R.raw.comingsoon
-                            )
-                        )
-
-                        LottieAnimation(
-                            composition = composition,
-                            iterations = LottieConstants.IterateForever,
-                            modifier = Modifier
-                                .size(300.dp)
-                                .align(Alignment.Center)
-                        )
-                    }
+                    NoFilesFoundScreen()
                 } else {
+                    val list = notesResult.data.sortedBy { it.homework_topic_name }
+                    val filteredList = list.filter { it.homework_topic_name.contains(searchText , ignoreCase = true) }
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                     ) {
                         PullToRefreshLazyColumn(
-                            items = notesResult.data,
+                            item = {
+                                SearchTextField(
+                                    searchText = searchText,
+                                    onSearchTextChanged = { searchText = it },
+                                    text = "Search Notes",
+                                    onCrossIconClicked = {
+                                        searchText = ""
+                                    },
+                                )
+                            },
+                            items = if (searchText == "") list else filteredList,
                             content = {
-                                EachCardForNotes(title = it.topic,
+                                EachCardForNotes(title = it.homework_topic_name,
                                     onViewPdfClicked = {
                                         onPdfViewClicked(
-                                            it.baseUrl+it.attachmentKey,
-                                            it.topic ?: ""
+                                            it.attachment_url,
+                                            it.homework_topic_name
                                         )
                                     }) {
                                     onPdfDownloadClicked(
-                                        it.baseUrl+it.attachmentKey,
-                                        it.topic
+                                        it.attachment_url,
+                                        it.homework_topic_name
                                     )
                                 }
                             },
                             isRefreshing = vm.isRefreshing,
                             onRefresh = {
-                                vm.refreshAllNotes(slug){
+                                vm.refreshAllNotes(
+                                    batchId = batchId,
+                                    subjectSlug = subjectSlug,
+                                    topicSlug = topicSlug
+                                ){
                                     vm.showSnackBar(snackbarHostState)
                                 }
                             })

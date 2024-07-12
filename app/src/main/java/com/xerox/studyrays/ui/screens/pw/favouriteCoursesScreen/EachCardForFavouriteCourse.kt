@@ -38,13 +38,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import coil.compose.AsyncImage
+import com.xerox.studyrays.cacheDb.pwCache.subjectsAndTeachersCache.BatchDetailsEntity
+import com.xerox.studyrays.model.pwModel.batchDetails.BatchDetails
 import com.xerox.studyrays.model.pwModel.batchDetails.BatchDetailsX
 import com.xerox.studyrays.ui.screens.pw.coursesscreen.Badge
 
 
 @Composable
 fun EachCardForFavouriteCourse(
-    item: BatchDetailsX,
+    item: BatchDetailsEntity,
     isSaved: Boolean = false,
     checkIfSaved: (String) -> Unit,
     onFavouriteIconClicked: (String) -> Unit,
@@ -52,7 +54,7 @@ fun EachCardForFavouriteCourse(
 ) {
 
     LaunchedEffect(key1 = Unit) {
-        checkIfSaved(item.external_id)
+        checkIfSaved(item.externalId)
     }
 
     Column(
@@ -92,7 +94,7 @@ fun EachCardForFavouriteCourse(
                         .padding(10.dp)
                         .fillMaxWidth(0.5f)
                         .align(Alignment.CenterStart),
-                    text = item.name,
+                    text = item.name ?: "Name",
                     maxLines = 1,
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
@@ -100,7 +102,7 @@ fun EachCardForFavouriteCourse(
                     )
                 )
 
-                Badge(text = item.language,modifier = Modifier
+                Badge(text = item.language ?: "Language",modifier = Modifier
                     .padding(10.dp)
                     .align(Alignment.CenterEnd))
 
@@ -108,7 +110,7 @@ fun EachCardForFavouriteCourse(
             }
 
             AsyncImage(
-                model = item.previewImage?.let { it.baseUrl + it.key },
+                model = item.baseUrl + item.key/*item.previewImage?.let { it.baseUrl + it.key }*/,
                 contentDescription = "Image",
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
@@ -140,7 +142,7 @@ fun EachCardForFavouriteCourse(
 
                 IconButton(
                     onClick = {
-                        onFavouriteIconClicked(item.external_id)
+                        onFavouriteIconClicked(item.externalId)
                     }, modifier = Modifier.weight(
                         1f
                     )

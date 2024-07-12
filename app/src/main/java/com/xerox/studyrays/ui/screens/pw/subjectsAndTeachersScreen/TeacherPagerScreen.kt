@@ -23,12 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.xerox.studyrays.model.pwModel.batchDetails.TeacherId
+import com.xerox.studyrays.model.pwModel.batchDetailss.Teacher
 
 
 @Composable
 fun TeacherPagerScreen(
-    list: List<TeacherId?>
+    list: List<Teacher?>,
 ) {
 
     LazyColumn {
@@ -40,21 +40,21 @@ fun TeacherPagerScreen(
 
             if (isOpen) {
                 TeacherAlertDialog(
-                    imageUrl = it?.imageId?.baseUrl + it?.imageId?.key,
-                    teacherName = it?.firstName + " " + it?.lastName,
-                    qualifications = it?.qualification ?: "",
-                    experience = it?.experience ?: ""
+                    imageUrl = it?.image ?: "",
+                    teacherName = it?.name ?: "Not provided",
+                    qualifications = it?.qualification ?: "Not provided",
+                    experience = it?.experience ?: "Not provided"
                 ) {
                     isOpen = false
                 }
             }
 
             EachCardForTeacher(
-                imageUrl = it?.imageId?.baseUrl + it?.imageId?.key,
-                teacherName = it?.firstName + " " + it?.lastName,
-                qualifications = it?.qualification ?: "",
-                featuredLine = it?.featuredLine ?: "",
-                experience = it?.experience ?: ""
+                imageUrl = it?.image ?: "",
+                teacherName = it?.name ?: "Not provided",
+                qualifications = it?.qualification ?: "Not provided",
+                featuredLine = "Hello hello, nazre screen par!",
+                experience = it?.experience ?: "Not provided"
             ) {
                 isOpen = true
 
@@ -70,7 +70,7 @@ fun TeacherAlertDialog(
     teacherName: String,
     qualifications: String,
     experience: String,
-    onDismissClicked: () -> Unit
+    onDismissClicked: () -> Unit,
 ) {
     AlertDialog(onDismissRequest = { onDismissClicked() }, confirmButton = { }, text = {
         Column(

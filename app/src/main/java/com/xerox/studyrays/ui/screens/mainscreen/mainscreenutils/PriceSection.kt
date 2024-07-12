@@ -90,7 +90,7 @@ fun CardForPriceSection(
         modifier = Modifier
             .padding(horizontal = 10.dp, vertical = 8.dp)
             .fillMaxWidth()
-            .height(70.dp)
+            .height(60.dp)
             .shadow(
                 elevation = 20.dp,
                 shape = RoundedCornerShape(10.dp),

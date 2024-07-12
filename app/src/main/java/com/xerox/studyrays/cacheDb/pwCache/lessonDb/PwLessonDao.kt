@@ -11,4 +11,7 @@ interface PwLessonDao {
 
     @Query("SELECT * FROM PwLessonEntity WHERE subjectId = :subjectId")
     suspend fun getById(subjectId: String): List<PwLessonEntity>?
+
+    @Query("SELECT * FROM PwLessonEntity")
+    suspend fun getAll(): List<PwLessonEntity>?
 }

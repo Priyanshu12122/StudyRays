@@ -13,4 +13,7 @@ interface KhazanaChaptersDao {
     @Query("SELECT * FROM khazanachaptersentity WHERE chapterId = :chapterId")
     suspend fun getKhazanaChapterString(chapterId: String): KhazanaChaptersEntity?
 
+    @Query("SELECT * FROM KhazanaChaptersEntity")
+    suspend fun getAll(): List<KhazanaChaptersEntity>?
+
 }

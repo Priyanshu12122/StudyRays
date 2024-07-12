@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -33,14 +31,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.stevdzasan.messagebar.rememberMessageBarState
+import com.xerox.studyrays.cacheDb.pwCache.courseDb.PwCourseEntity
 import com.xerox.studyrays.db.favouriteCoursesDb.FavouriteCourse
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.utils.Category
 import com.xerox.studyrays.utils.CategoryTabRow
 import com.xerox.studyrays.utils.DataNotFoundScreen
-import com.xerox.studyrays.utils.EmptyScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 import kotlinx.coroutines.launch
 
@@ -48,9 +47,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun CoursesScreen(
     classValue: String,
+    isOld: Boolean,
     vm: MainViewModel = hiltViewModel(),
     onBackClicked: () -> Unit,
-    onCLick: (String, String) -> Unit,
+    onClickOld: (String, String) -> Unit,
+    onCLick: (String, String, String, String) -> Unit,
 ) {
 
     val state by vm.courses.collectAsState()
@@ -61,7 +62,7 @@ fun CoursesScreen(
     val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(key1 = Unit) {
-        vm.getClasses(classValue)
+        vm.getClasses(classValue, isOld)
     }
 
     Scaffold(
@@ -87,14 +88,16 @@ fun CoursesScreen(
         }) { it ->
         when (val result = state) {
             is Response.Error -> {
+
                 val messageState = rememberMessageBarState()
 
                 DataNotFoundScreen(
                     errorMsg = result.msg,
                     state = messageState,
+                    paddingValues = it,
                     shouldShowBackButton = true,
                     onRetryClicked = {
-                        vm.getClasses(classValue)
+                        vm.getClasses(classValue, isOld)
                     }) {
                     onBackClicked()
                 }
@@ -107,6 +110,7 @@ fun CoursesScreen(
             }
 
             is Response.Success -> {
+
 
 
                 val allCourses: MutableList<Category> = mutableListOf()
@@ -188,8 +192,7 @@ fun CoursesScreen(
                 ) {
 
                     if (allCourses.size <= 0) {
-                        EmptyScreen()
-                        return@Scaffold
+                        NoFilesFoundScreen()
                     } else {
                         CategoryTabRow(
                             pagerState = pagerState,
@@ -203,8 +206,10 @@ fun CoursesScreen(
 
                         HorizontalPager(
                             state = pagerState
-                        ) {
-                            val list = allCourses[it].category
+                        ) { it ->
+                            val list = remember {
+                                allCourses[it].category.sortedByDescending { it.id }
+                            }
                             if (list.isEmpty()) {
                                 Box(modifier = Modifier.fillMaxSize()) {
                                     Text(
@@ -218,7 +223,7 @@ fun CoursesScreen(
 
                                 PullToRefreshLazyColumn(
                                     items = list,
-                                    content = {batchItem->
+                                    content = { batchItem: PwCourseEntity ->
                                         val isSaved = savedStatusMap[batchItem.externalId] ?: false
                                         EachCourseCardInClass(
                                             item = batchItem,
@@ -243,45 +248,27 @@ fun CoursesScreen(
                                                 }
                                             }
                                         ) {
-                                            onCLick(batchItem.externalId, batchItem.name)
+
+                                            if(isOld){
+                                                onClickOld(batchItem.externalId, batchItem.name)
+                                            } else {
+
+                                                onCLick(
+                                                    batchItem.externalId,
+                                                    batchItem.slug,
+                                                    batchItem.classValue,
+                                                    batchItem.name
+                                                )
+                                            }
+
                                         }
                                     },
                                     isRefreshing = vm.isRefreshing,
-                                    onRefresh = { vm.refreshAllCourses(classValue = classValue){
-                                        vm.showSnackBar(snackBarHostState)
-                                    } })
-
-//                                LazyColumn {
-//                                    items(list) { batchItem ->
-//                                        val isSaved = savedStatusMap[batchItem.externalId] ?: false
-//
-//                                        EachCourseCardInClass(
-//                                            item = batchItem,
-//                                            isSaved = isSaved,
-//                                            onFavouriteIconClicked = { value ->
-//                                                vm.onFavoriteClick(FavouriteCourse(externalId = value))
-//                                                savedStatusMap[batchItem.externalId] = !isSaved
-//                                                vm.showToast(
-//                                                    context,
-//                                                    if (!isSaved) "${batchItem.name} added to favourites list" else "${batchItem.name} removed from favourites list"
-//                                                )
-//                                            },
-//                                            checkIfSaved = {
-//                                                scope.launch {
-//                                                    val saved =
-//                                                        vm.checkIfItemIsPresentInDb(
-//                                                            FavouriteCourse(
-//                                                                it
-//                                                            )
-//                                                        )
-//                                                    savedStatusMap[batchItem.externalId] = saved
-//                                                }
-//                                            }
-//                                        ) {
-//                                            onCLick(batchItem.externalId, batchItem.name)
-//                                        }
-//                                    }
-//                                }
+                                    onRefresh = {
+                                        vm.refreshAllCourses(classValue = classValue, isOld = isOld) {
+                                            vm.showSnackBar(snackBarHostState)
+                                        }
+                                    })
                             }
                         }
                     }

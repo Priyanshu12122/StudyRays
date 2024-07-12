@@ -12,4 +12,9 @@ interface KhazanaSubjectDao {
 
     @Query("SELECT * FROM khazanasubjectentity WHERE id = :id")
     suspend fun getKhazanaSubjectString(id: String): KhazanaSubjectEntity?
+
+    @Query("SELECT * FROM KhazanaSubjectEntity")
+    suspend fun getAll(): List<KhazanaSubjectEntity>?
+
+
 }

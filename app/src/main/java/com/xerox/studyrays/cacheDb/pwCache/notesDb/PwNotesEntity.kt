@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity
 data class PwNotesEntity(
     @PrimaryKey
+    val id: String,
     val slug: String,
     val topic: String?,
     val baseUrl: String?,

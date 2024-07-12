@@ -33,6 +33,7 @@ import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyVerticalGrid
 import kotlinx.coroutines.launch
 
@@ -88,13 +89,13 @@ fun KhazanaTeachersScreen(
                 val messageState = rememberMessageBarState()
                 DataNotFoundScreen(
                     errorMsg = result.msg,
+                    paddingValues = paddingValues,
                     state = messageState,
                     shouldShowBackButton = true,
                     onRetryClicked = {
                         vm.getKhazanaTeachers(id)
                     }) {
                     onBackClicked()
-
                 }
             }
 
@@ -103,72 +104,83 @@ fun KhazanaTeachersScreen(
             }
 
             is Response.Success -> {
-                val savedStatusMap =
-                    remember { mutableStateMapOf<String, Boolean>() }
-                Column(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize()
-                )
-                {
 
-                    PullToRefreshLazyVerticalGrid(
-                        items = result.data,
-                        content = { item ->
-                            val isSaved = savedStatusMap[item.external_id] ?: false
-                            EachCardForKhazanaTeacher(
-                                item = item,
-                                isSaved = isSaved,
-                                onFavouriteIconClicked = { value ->
-                                    vm.onFavoriteClick(
-                                        item = KhazanaFav(
-                                            externalId = value,
-                                            imageUrl = item.imageId_baseUrl + item.imageId_key,
-                                            subjectId = item.subjectId,
-                                            chapterId = item.external_id,
-                                            courseName = item.name + " " + item.description.substringBefore(
-                                                ";"
-                                            ),
-                                            totalLectures = item.totalLectures
-                                        )
-                                    )
-                                    savedStatusMap[item.external_id] = !isSaved
-                                    vm.showToast(
-                                        context,
-                                        if (!isSaved) "${
-                                            item.name + " " + item.description.substringBefore(
-                                                ";"
+                if (result.data.isEmpty()) {
+                    NoFilesFoundScreen()
+                } else {
+                    val savedStatusMap =
+                        remember { mutableStateMapOf<String, Boolean>() }
+                    Column(
+                        modifier = Modifier
+                            .padding(paddingValues)
+                            .fillMaxSize()
+                    )
+                    {
+
+                        PullToRefreshLazyVerticalGrid(
+                            items = result.data,
+                            content = { item ->
+                                val isSaved = savedStatusMap[item.external_id] ?: false
+                                EachCardForKhazanaTeacher(
+                                    item = item,
+                                    isSaved = isSaved,
+                                    onFavouriteIconClicked = { value ->
+                                        vm.onFavoriteClick(
+                                            item = KhazanaFav(
+                                                externalId = value,
+                                                imageUrl = item.imageId_baseUrl + item.imageId_key,
+                                                subjectId = item.subjectId,
+                                                chapterId = item.external_id,
+                                                courseName = item.name + " " + item.description.substringBefore(
+                                                    ";"
+                                                ),
+                                                totalLectures = item.totalLectures
                                             )
-                                        } added to favourites list"
-                                        else "${item.name + " " + item.description.substringBefore(";")} removed from favourites list"
-                                    )
+                                        )
+                                        savedStatusMap[item.external_id] = !isSaved
+                                        vm.showToast(
+                                            context,
+                                            if (!isSaved) "${
+                                                item.name + " " + item.description.substringBefore(
+                                                    ";"
+                                                )
+                                            } added to favourites list"
+                                            else "${
+                                                item.name + " " + item.description.substringBefore(
+                                                    ";"
+                                                )
+                                            } removed from favourites list"
+                                        )
 
-                                },
-                                checkIfSaved = {
-                                    scope.launch {
-                                        val saved =
-                                            vm.checkIfItemIsPresentInDb(it)
-                                        savedStatusMap[item.external_id] = saved
+                                    },
+                                    checkIfSaved = {
+                                        scope.launch {
+                                            val saved =
+                                                vm.checkIfItemIsPresentInDb(it)
+                                            savedStatusMap[item.external_id] = saved
+                                        }
                                     }
+                                ) {
+                                    onClick(
+                                        item.subjectId,
+                                        item.external_id,
+                                        item.imageId_baseUrl + item.imageId_key,
+                                        item.name + " " + item.description.substringBefore(";")
+                                    )
                                 }
-                            ) {
-                                onClick(
-                                    item.subjectId,
-                                    item.external_id,
-                                    item.imageId_baseUrl + item.imageId_key,
-                                    item.name + " " + item.description.substringBefore(";")
-                                )
-                            }
-                        },
-                        isRefreshing = vm.isRefreshing,
-                        gridCells = 2,
-                        onRefresh = {
-                            vm.refreshKhazanaTeachers(id) {
-                                vm.showSnackBar(snackBarHostState)
-                            }
-                        })
+                            },
+                            isRefreshing = vm.isRefreshing,
+                            gridCells = 2,
+                            onRefresh = {
+                                vm.refreshKhazanaTeachers(id) {
+                                    vm.showSnackBar(snackBarHostState)
+                                }
+                            })
+
+                    }
 
                 }
+
             }
         }
 

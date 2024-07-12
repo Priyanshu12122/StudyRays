@@ -2,12 +2,9 @@ package com.xerox.studyrays.ui.screens.khazana.khazanaLecturesScreen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.SnackbarHostState
@@ -15,22 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.stevdzasan.messagebar.rememberMessageBarState
-import com.xerox.studyrays.R
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
 import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForNotes
 import com.xerox.studyrays.utils.DataNotFoundScreen
-import com.xerox.studyrays.utils.EmptyScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.NoFilesFoundScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -41,6 +31,7 @@ fun KhazanaDppScreen(
     topicId: String,
     topicName: String,
     snackBarHostState: SnackbarHostState,
+    paddingValues: PaddingValues,
     onPdfViewClicked: (String, String) -> Unit,
     onPdfDownloadClicked: (String?,String?) -> Unit
 ) {
@@ -60,6 +51,7 @@ fun KhazanaDppScreen(
 
                 DataNotFoundScreen(
                     errorMsg = dppResult.msg,
+                    paddingValues = paddingValues,
                     state = messageState,
                     shouldShowBackButton = false,
                     onRetryClicked = {
@@ -75,72 +67,41 @@ fun KhazanaDppScreen(
             }
 
             is Response.Success -> {
-
-                if (dppResult.data?.dpps?.isEmpty() == true  && dppResult.data?.notes?.isEmpty() == true || dppResult.data != null){
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        val composition by rememberLottieComposition(
-                            spec = LottieCompositionSpec.RawRes(
-                                if (isSystemInDarkTheme()) R.raw.comingsoondarkmode else  R.raw.comingsoon
-                            )
-                        )
-
-                        LottieAnimation(
-                            composition = composition,
-                            iterations = LottieConstants.IterateForever,
-                            modifier = Modifier
-                                .size(300.dp)
-                                .align(Alignment.Center)
-                        )
-                    }
+                if (dppResult.data?.dpps?.isEmpty() == true && dppResult.data.notes.isEmpty()){
+                    NoFilesFoundScreen()
                 } else {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                     ) {
-
-                        if (dppResult.data != null){
-                            LazyColumn {
+                        LazyColumn {
 //                            Dpps
-                                items(dppResult.data.dpps) {
-                                    EachCardForNotes(title = it.title,
-                                        onViewPdfClicked = {
-                                            onPdfViewClicked(it.url,it.title)
-                                        }){
-                                        onPdfDownloadClicked(it.url,it.title)
-                                    }
-                                }
-//                            Notes
-                                items(dppResult.data.notes) {
-                                    EachCardForNotes(title = it.title,
-                                        onViewPdfClicked = {
-                                            onPdfViewClicked(it.url ?: "",it.title ?: "")
-                                        }){
-                                        onPdfDownloadClicked(it.url,it.title)
-                                    }
+                            items(dppResult.data?.dpps ?: emptyList()) {
+                                EachCardForNotes(title = it.title,
+                                    onViewPdfClicked = {
+                                        onPdfViewClicked(it.url,it.title)
+                                    }){
+                                    onPdfDownloadClicked(it.url,it.title)
                                 }
                             }
-
-                        } else {
-                            EmptyScreen()
+//                            Notes
+                            items(dppResult.data?.notes ?: emptyList()) {
+                                EachCardForNotes(title = it.title,
+                                    onViewPdfClicked = {
+                                        onPdfViewClicked(it.url ?: "",it.title ?: "")
+                                    }){
+                                    onPdfDownloadClicked(it.url,it.title)
+                                }
+                            }
                         }
-
-
-
                     }
 
                 }
-            }
+                }
+//            }
 
             else -> {
-                DataNotFoundScreen(
-                    errorMsg = "Empty",
-                    state = rememberMessageBarState(),
-                    shouldShowBackButton = false,
-                    onRetryClicked = {
-                        vm.getKhazanaDpp(subjectId, chapterId, topicId, topicName = topicName)
-                    }) {
-
-                }
+                NoFilesFoundScreen()
             }
         }
     }

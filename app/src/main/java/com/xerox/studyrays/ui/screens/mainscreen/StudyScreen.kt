@@ -18,12 +18,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
@@ -44,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.DarkGray
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
@@ -62,7 +69,6 @@ import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.FeatureSection
 import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.NavDrawerItems
 import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.SearchSection
 import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.SearchTopAppBar
-import com.xerox.studyrays.utils.BadgeWithCrossIcon
 import com.xerox.studyrays.utils.SpacerHeight
 import com.xerox.studyrays.utils.mainScreenItemsList
 import com.xerox.studyrays.utils.navBarList
@@ -73,10 +79,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun StudyScreen(
     vm: MainViewModel = hiltViewModel(),
-    onBatchClick: (String, String) -> Unit,
+    onBatchClick: (String, String, String, String) -> Unit,
     onFavBatchesClicked: () -> Unit,
     onKhazanaClicked: () -> Unit,
     onAkClicked: () -> Unit,
+    onUpdateBatchesClicked: () -> Unit,
+    onWatchLaterClicked: () -> Unit,
     onAllBatchesClicked: () -> Unit,
 ) {
 
@@ -89,7 +97,8 @@ fun StudyScreen(
         vm.getAlertItem()
         vm.getTotalFee()
         vm.observeInternetAccessibility()
-        vm.getAllExampleItems()
+        vm.getStatus()
+        vm.onTaskCompleted()
     }
 
 
@@ -145,7 +154,7 @@ fun StudyScreen(
                                     .clip(CircleShape)
                                     .clickable {
                                         if (officialChannelLink == "") {
-                                            vm.showToast(context, " Sorry Some error occured")
+                                            vm.showToast(context, " Sorry Some error occurred")
                                         } else {
                                             vm.openUrl(context, officialChannelLink)
 
@@ -300,7 +309,11 @@ fun StudyScreen(
                         onSearchTextChanged = { searchText = it },
                         onSearchIconClicked = {
                             isSearching = true
-                        })
+                        },
+                        onWatchLaterClicked = {
+                            onWatchLaterClicked()
+                        }
+                        )
 
                 }
             }, modifier = Modifier
@@ -342,22 +355,37 @@ fun StudyScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
                     ) {
-                        cacheState?.forEach {
-                            BadgeWithCrossIcon(text = it.searchText,
-                                onClick = {
-                                    searchText = it
-                                },
-                                onCrossClick =  {
-                                    vm.deleteSearchItem(it)
-                                })
+                        cacheState?.forEach { searchEntity ->
+
+                            AssistChip(onClick = { searchText = searchEntity.searchText }, label = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        searchEntity.searchText,
+                                        fontSize = 14.sp,
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    IconButton(onClick = {
+                                        vm.deleteSearchItem(searchEntity)
+                                    }, modifier = Modifier.size(16.dp)) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Close",
+                                        )
+                                    }
+                                }
+                            })
                         }
                     }
                 }
 
+
 //                Search
 
-                SearchSection(onBatchClick = { id, name ->
-                    onBatchClick(id, name)
+                SearchSection(onBatchClick = { id, name, classValue, slugg ->
+                    onBatchClick(id, name, classValue, slugg)
                 })
 
                 FeatureSection(
@@ -376,13 +404,13 @@ fun StudyScreen(
                     },
                     onAkClicked = {
                         onAkClicked()
+                    },
+                    onUpdateBatchesClicked = {
+                        onUpdateBatchesClicked()
                     }) {
                     onAllBatchesClicked()
                 }
             }
-
         }
-
     }
-
 }

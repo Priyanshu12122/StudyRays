@@ -48,6 +48,7 @@ fun FeatureSection(
     onFavBatchesClicked: () -> Unit,
     onKhazanaClicked: () -> Unit,
     onAkClicked: () -> Unit,
+    onUpdateBatchesClicked: () -> Unit,
     onAllBatchesClicked: () -> Unit,
 ) {
     Column(
@@ -69,7 +70,11 @@ fun FeatureSection(
                 PriceSection()
             }
 
-            items(list) {
+            item(span = { GridItemSpan(2) }) {
+                StatusScreen()
+            }
+
+            items(list, key = {it.title }) {
                 FeatureItem(item = it) {
 
                     when (it.title) {
@@ -78,6 +83,7 @@ fun FeatureSection(
                         "Favourite Batches" -> onFavBatchesClicked()
                         "Khazana" -> onKhazanaClicked()
                         "Apni Kaksha" -> onAkClicked()
+                        "Update/add batches" -> onUpdateBatchesClicked()
 
                     }
                 }
@@ -144,13 +150,13 @@ fun FeatureItem(
                     LottieAnimation(
                         composition = composition,
                         iterations = LottieConstants.IterateForever,
-                        modifier = Modifier.size(85.dp)
+                        modifier = Modifier.size(80.dp)
                     )
                 } else {
                     Image(
                         painter = painterResource(id = item.raw),
                         contentDescription = "",
-                        modifier = Modifier.size(85.dp)
+                        modifier = Modifier.size(80.dp)
                     )
                 }
 

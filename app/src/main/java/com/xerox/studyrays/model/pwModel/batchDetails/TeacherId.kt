@@ -10,7 +10,7 @@ data class TeacherId(
     @SerializedName("experience") val experience: String,
     @SerializedName("featuredLine") val featuredLine: String,
     @SerializedName("firstName") val firstName: String,
-    @SerializedName("imageId") val imageId: ImageId,
+    @SerializedName("imageId") val imageId: ImageId?,
     @SerializedName("lastName") val lastName: String,
     @SerializedName("qualification") val qualification: String
 )

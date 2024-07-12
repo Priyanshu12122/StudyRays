@@ -35,6 +35,7 @@ import com.xerox.studyrays.ui.theme.MainPurple
 
 @Composable
 fun EachCardForChapters(
+    modifier: Modifier = Modifier,
     lessonName: String,
     notes: String,
     exercises: String,
@@ -43,7 +44,7 @@ fun EachCardForChapters(
 ) {
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = 10.dp, vertical = 8.dp)
             .fillMaxWidth()
             .height(100.dp)
