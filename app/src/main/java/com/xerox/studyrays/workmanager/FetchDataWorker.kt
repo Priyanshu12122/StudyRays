@@ -12,15 +12,12 @@ import dagger.assisted.AssistedInject
 class FetchDataWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val repository: ApiRepository
+    private val repository: ApiRepository,
 ): CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
-            repository.fetchAndCacheTotalFee()
             repository.getNavItems()
-            repository.fetchAndCachePromoItems()
-            repository.cacheAllKhazana()
             Result.success()
         } catch (e: Exception){
             Result.retry()

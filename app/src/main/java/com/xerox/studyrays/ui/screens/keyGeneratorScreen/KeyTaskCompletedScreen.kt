@@ -66,7 +66,6 @@ fun KeyTaskCompletedScreen(
 
                 OutlinedButton(
                     onClick = {
-                        vm.onTaskCompleted()
                         onClick()
                     },
                     modifier = modifier

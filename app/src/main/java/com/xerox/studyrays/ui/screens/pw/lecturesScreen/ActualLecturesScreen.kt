@@ -1,25 +1,36 @@
 package com.xerox.studyrays.ui.screens.pw.lecturesScreen
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.utils.Constants
+import com.xerox.studyrays.utils.Constants.PAGE_SIZE
 import com.xerox.studyrays.utils.DataNotFoundScreen
-import com.xerox.studyrays.utils.LoadingScreen
 import com.xerox.studyrays.utils.NoFilesFoundScreen
-import com.xerox.studyrays.utils.PullToRefreshLazyColumn
+import com.xerox.studyrays.utils.PullToRefreshLazyColumnForLecturesScreen
 import com.xerox.studyrays.utils.SearchTextField
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -41,12 +52,22 @@ fun ActualLecturesScreen(
     val videosResult = videosState
 
 
+//    val listState = rememberLazyListState()
+
+    LaunchedEffect(Unit) {
+        if (videosResult !is Response.Success) {
+            vm.getAllVideos(topicSlug, subjectSlug, batchId)
+        }
+    }
+
+
     var searchText by rememberSaveable {
         mutableStateOf("")
     }
 
     when (videosResult) {
         is Response.Error -> {
+
             val messageState = rememberMessageBarState()
 
             if (videosResult.msg == vm.nullErrorMsg) {
@@ -61,7 +82,7 @@ fun ActualLecturesScreen(
                         vm.getAllVideos(
                             batchId = batchId,
                             subjectSlug = subjectSlug,
-                            topicSlug = topicSlug
+                            topicSlug = topicSlug,
                         )
                     }) {
                     onBackClicked()
@@ -72,59 +93,83 @@ fun ActualLecturesScreen(
         }
 
         is Response.Loading -> {
-            LoadingScreen(paddingValues = PaddingValues())
+
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+            ) {
+                LazyColumn {
+                    items(10) {
+                        EachCardForVideo3Loading()
+                    }
+                }
+
+            }
+
         }
 
         is Response.Success -> {
-            if (videosResult.data.isEmpty()) {
+
+            val state = vm.state
+            val result = vm.state.items
+
+            SideEffect {
+                Log.d("TAG", "Success with ${result.size} items")
+                Log.d("TAG", "result $result")
+            }
+
+            if (result.isEmpty()) {
                 NoFilesFoundScreen()
             } else {
 
-//                val savedStatusMap =
-//                    remember { mutableStateMapOf<String, Boolean>() }
-//
-//                val savedStatusMapWatchLater =
-//                    remember { mutableStateMapOf<String, Boolean>() }
-//
-//                var isOpen by rememberSaveable {
-//                    mutableStateOf(false)
-//                }
-//
-//                var selectedVideoId by rememberSaveable {
-//                    mutableStateOf("")
-//                }
-//
-//                var selectedVideoUrl by rememberSaveable {
-//                    mutableStateOf("")
-//                }
-//
-//                var isCompleted by rememberSaveable {
-//                    mutableStateOf(false)
-//                }
-
-                val videoList = videosResult.data.sortedBy { it.video_name }
+                val videoList = result.sortedBy { it.createdAt }
                 val filteredList = videoList.filter { it.video_name.contains(searchText, true) }
 
-
-//                if (isOpen) {
-//                    BottomSheet(
-//                        sheetState = rememberModalBottomSheetState(),
-//                        onMarkAsCompletedClicked = {
-//                            vm.onMarkAsCompleteClicked(Video(selectedVideoId))
-//                            savedStatusMap[selectedVideoId] = !isCompleted
-//                            isOpen = false
+//                LazyColumn {
+//                    itemsIndexed(videoList) { index, video ->
 //
-//                        },
-//                        onDownloadClicked = {
+//                        vm.onChangeScrollPosition(index)
+//                        if ((index + 1) >= (state.page * PAGE_SIZE) && !state.isLoading) {
+//                            vm.loadNextItems(
+//                                topicSlug = topicSlug,
+//                                subjectSlug = subjectSlug,
+//                                batchId = batchId
+//                            )
+//                        }
+//                        EachCardForVideo3(
+//                            imageUrl = video.video_image,
+//                            title = video.video_name,
+//                            dateCreated = video.upload_date.substringBefore("T"),
+//                            duration = video.duration,
+//                            videoId = video.video_id,
+//                            onVideoClicked = {
+//                                onVideoClicked(
+//                                    video.videoUrl,
+//                                    video.video_name,
+//                                    video.video_external_id,
+//                                    video.embed_code,
+//                                    video.video_id,
+//                                    video.video_image,
+//                                    video.createdAt,
+//                                    video.duration,
+//                                    Constants.PW
+//                                )
+//                            }
+//                        )
 //
-//                        },
-//                        isCompleted = isCompleted,
-//                    ) {
-//                        isOpen = false
 //                    }
+//
+//                    item {
+//                        if (state.isLoading) {
+//                            CircularProgressIndicator(modifier = Modifier.size(60.dp))
+//                        }
+//                    }
+//
 //                }
 
-                PullToRefreshLazyColumn(
+                PullToRefreshLazyColumnForLecturesScreen(
+//                    lazyListState = listState,
                     item = {
 
                         SearchTextField(
@@ -137,11 +182,22 @@ fun ActualLecturesScreen(
                         )
 
                     },
+                    item2 = {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(50.dp))
+                        }
+                    },
                     items = if (searchText == "") videoList else filteredList,
-                    content = { video ->
-//                        val isComplete = savedStatusMap[video.video_id] ?: false
-//
-//                        val isSaved = savedStatusMapWatchLater[video.video_id] ?: false
+                    content = { index, video ->
+
+                        vm.onChangeScrollPosition(index)
+                        if ((index + 1) >= (state.page * PAGE_SIZE) && !state.isLoading) {
+                            vm.loadNextItems(
+                                topicSlug = topicSlug,
+                                subjectSlug = subjectSlug,
+                                batchId = batchId
+                            )
+                        }
 
                         EachCardForVideo3(
                             imageUrl = video.video_image,
@@ -163,75 +219,13 @@ fun ActualLecturesScreen(
                                 )
                             }
                         )
-//                        EachCardForVideo(
-//                            imageUrl = video.image_url,
-//                            title = video.name,
-//                            dateCreated = video.createdAt.substringBefore("T"),
-//                            isCompleted = isComplete,
-//                            duration = video.duration,
-//                            onMoreVertClicked = {
-//                                isOpen = true
-//                                selectedVideoId = video.video_id
-//                                selectedVideoUrl = video.video_url
-//                                isCompleted = isComplete
-//                            },
-//                            videoId = video.video_id,
-//                            isSaved = isSaved,
-//                            onStarClick = {
-//                                vm.onStarClick(WatchLaterEntity(
-//                                    imageUrl = video.image_url,
-//                                    title = video.name,
-//                                    dateCreated = video.createdAt,
-//                                    isComplete = isComplete,
-//                                    duration = video.duration,
-//                                    videoId = video.video_id,
-//                                    videoUrl = video.video_url,
-//                                    externalId = video.external_id,
-//                                    embedCode = video.embedCode,
-//                                    time = System.currentTimeMillis(),
-//                                    isAk = false,
-//                                    isKhazana = false,
-//                                    isPw = true
-//                                ), context = context)
-//                                savedStatusMapWatchLater[video.video_id] = !isSaved
-//                            },
-//                            checkIfSaved = {id->
-//                                scope.launch {
-//                                    val saved = vm.checkIfPresentInWatchLater(id)
-//                                    savedStatusMapWatchLater[video.video_id] = saved
-//                                }
-//                            },
-//                            checkIfCompleted = {
-//                                scope.launch {
-//                                    val saved =
-//                                        vm.checkIfItemIsPresentInVideoDb(
-//                                            Video(
-//                                                it
-//                                            )
-//                                        )
-//                                    savedStatusMap[video.video_id] = saved
-//                                }
-//                            }
-//                        ) {
-//                            onVideoClicked(
-//                                video.video_url,
-//                                video.name,
-//                                video.external_id,
-//                                video.embedCode,
-//                                video.video_id,
-//                                video.image_url,
-//                                video.createdAt,
-//                                video.duration,
-//                                Constants.PW
-//                            )
-//                        }
                     },
                     isRefreshing = vm.isRefreshing,
                     onRefresh = {
                         vm.refreshAllVideos(
                             batchId = batchId,
                             subjectSlug = subjectSlug,
-                            topicSlug = topicSlug
+                            topicSlug = topicSlug,
                         ) {
                             vm.showSnackBar(snackbarHostState)
                         }

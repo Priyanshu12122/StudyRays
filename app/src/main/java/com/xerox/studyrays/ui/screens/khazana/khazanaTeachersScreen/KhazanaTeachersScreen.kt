@@ -5,6 +5,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,8 +34,9 @@ import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.db.khazanaFavDb.KhazanaFav
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
+import com.xerox.studyrays.ui.screens.pw.subjectsAndTeachersScreen.EachCardForSubjectLoading
 import com.xerox.studyrays.utils.DataNotFoundScreen
-import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.LoadingTemplate
 import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyVerticalGrid
 import kotlinx.coroutines.launch
@@ -48,11 +52,14 @@ fun KhazanaTeachersScreen(
     onClick: (subjectId: String, chapterId: String, imageUrl: String, courseName: String) -> Unit,
 ) {
 
-    LaunchedEffect(key1 = Unit) {
-        vm.getKhazanaTeachers(id)
-    }
-
     val state by vm.khazanaTeachers.collectAsState()
+    val result = state
+
+    LaunchedEffect(key1 = Unit) {
+        if (result !is Response.Success) {
+            vm.getKhazanaTeachers(id)
+        }
+    }
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -84,7 +91,7 @@ fun KhazanaTeachersScreen(
         }
     ) { paddingValues ->
 
-        when (val result = state) {
+        when (result) {
             is Response.Error -> {
                 val messageState = rememberMessageBarState()
                 DataNotFoundScreen(
@@ -100,7 +107,16 @@ fun KhazanaTeachersScreen(
             }
 
             is Response.Loading -> {
-                LoadingScreen(paddingValues = paddingValues)
+
+                Column {
+                    LazyVerticalGrid(GridCells.Fixed(2)) {
+                        items(10){
+                            EachCardForKhazanaTeacherLoading()
+                        }
+                    }
+                }
+
+
             }
 
             is Response.Success -> {

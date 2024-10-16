@@ -1,12 +1,14 @@
 package com.xerox.studyrays.ui.screens.videoPlayerScreen.playerUiScreen
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,7 +35,6 @@ fun PlayerScreen(
     onSettingsClicked: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    val context = LocalContext.current
 
     if (isPlayerReady) {
 
@@ -57,11 +58,11 @@ fun PlayerScreen(
                 position = position,
                 onPlayerViewClick = {
                     val showMainUi = !playerState.showMainUi
-                    if (showMainUi) {
-                        Utils.showSystemBars(context)
-                    } else {
-                        Utils.hideSystemBars(context)
-                    }
+//                    if (showMainUi) {
+//                        Utils.showSystemBars(context)
+//                    } else {
+//                        Utils.hideSystemBars(context)
+//                    }
                     mediaPlayerManager.onPlayerAction(PlayerAction.ChangeShowMainUi(showMainUi))
                 }
             )
@@ -96,8 +97,11 @@ private fun PlayerLayout(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize()
-        .background(if (showMainUi)  Color.Black.copy(alpha = 0.6f) else Color.Transparent )) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(if (showMainUi) Color.Black.copy(alpha = 0.6f) else Color.Transparent)
+    ) {
         if (playerState.isStateBuffering) {
             CircularProgressIndicator(
                 color = Color.White,
@@ -110,7 +114,15 @@ private fun PlayerLayout(
 
         AnimatedVisibility(
             visible = showMainUi,
-            modifier = Modifier.align(Alignment.TopEnd)
+            modifier = Modifier.align(Alignment.TopEnd),
+            enter = slideInVertically(
+                initialOffsetY = { -it },
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { -it },
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+            )
         ) {
             SecondaryControlButtons(
                 resizeMode = playerState.resizeMode,
@@ -126,8 +138,17 @@ private fun PlayerLayout(
 
         AnimatedVisibility(
             visible = showMainUi,
-            modifier = Modifier.align(Alignment.Center)
-        ) {
+            modifier = Modifier.align(Alignment.Center),
+            enter = slideInVertically(
+                initialOffsetY = { 2 * it },
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { 2 * it },
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+            )
+
+            ) {
             MainControlButtons(
                 isSeekForwardButtonAvailable = playerState.isSeekForwardButtonAvailable,
                 isSeekBackButtonAvailable = playerState.isSeekBackButtonAvailable,
@@ -139,7 +160,15 @@ private fun PlayerLayout(
 
         AnimatedVisibility(
             visible = showMainUi,
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.BottomCenter),
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+            )
         ) {
             BottomContent(
                 playerState = playerState,
@@ -164,8 +193,5 @@ private fun BottomContent(
             onPlayerAction = onPlayerAction,
             isLandscapeMode = playerState.isLandscapeMode
         )
-//        Spacer(Modifier.height(4.dp))
-
-//        Spacer(Modifier.height(4.dp))
     }
 }

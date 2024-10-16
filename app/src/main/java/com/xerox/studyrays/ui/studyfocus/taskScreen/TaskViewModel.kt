@@ -28,8 +28,10 @@ class TaskViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val navArgs: Int? = savedStateHandle["taskSubjectId"] /*savedStateHandle.navArgs()*/
-    private val taskId: Int? = savedStateHandle["taskId"] /*savedStateHandle.navArgs()*/
+    val task: Int? = savedStateHandle["taskId"]
+
+    private val navArgs: Int? = savedStateHandle.get<Int>("taskSubjectId")?.takeIf { it != -1 } /*savedStateHandle.navArgs()*/
+    private val taskId: Int? =   savedStateHandle.get<Int>("taskId")?.takeIf { it != -1 } /*savedStateHandle.navArgs()*/
 
     private val _state = MutableStateFlow(TaskState())
     val state = combine(

@@ -91,14 +91,14 @@ fun EachCardForFavKhazanaTeacher(
                 AsyncImage(
                     model = item.imageUrl,
                     contentDescription = "",
-                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .padding(8.dp)
                         .fillMaxWidth()
                         .height(90.dp)
                         .clip(
                             RoundedCornerShape(8.dp)
-                        )
+                        ),
+                    contentScale = ContentScale.FillWidth
                 )
 
                 IconButton(

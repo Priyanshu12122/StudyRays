@@ -103,7 +103,7 @@ fun EachCardForAkIndex(
                     .padding(horizontal = 10.dp)
                     .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.FillWidth
             )
 
 

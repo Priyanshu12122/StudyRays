@@ -1,6 +1,5 @@
 package com.xerox.studyrays
 
-import android.animation.ObjectAnimator
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -9,12 +8,10 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
-import android.view.animation.OvershootInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -28,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.core.animation.doOnEnd
 import androidx.core.app.ActivityCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
@@ -37,7 +33,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.rememberNavController
 import com.xerox.studyrays.data.internetAvailability.NetworkManager
 import com.xerox.studyrays.navigation.BottomBarNavigationScreen
-import com.xerox.studyrays.navigation.NavRoutes
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.studyfocus.sessionScreen.StudySessionTimerService
 import com.xerox.studyrays.ui.theme.StudyRaysTheme
@@ -68,43 +63,42 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        viewModel.getKeyTask()
         viewModel.getStartDestination()
-        viewModel.checkStartDestination()
-        installSplashScreen().apply {
-            this.setKeepOnScreenCondition {
-                viewModel.isLoading.value
-            }
-            this.setOnExitAnimationListener { screen ->
-                val zoomX = ObjectAnimator.ofFloat(
-                    screen.iconView,
-                    View.SCALE_X,
-                    0.4f,
-                    0.0f
-                )
-                zoomX.interpolator = OvershootInterpolator()
-                zoomX.duration = 500L
-                zoomX.doOnEnd { screen.remove() }
-
-                val zoomY = ObjectAnimator.ofFloat(
-                    screen.iconView,
-                    View.SCALE_Y,
-                    0.4f,
-                    0.0f
-                )
-                zoomY.interpolator = OvershootInterpolator()
-                zoomY.duration = 500L
-                zoomY.doOnEnd { screen.remove() }
-
-                zoomX.start()
-                zoomY.start()
-            }
-        }
+        installSplashScreen()
+//            .apply {
+//          this.setKeepOnScreenCondition {
+//                viewModel.isLoading.value
+//            }
+//            this.setOnExitAnimationListener { screen ->
+//                val zoomX = ObjectAnimator.ofFloat(
+//                    screen.iconView,
+//                    View.SCALE_X,
+//                    0.4f,
+//                    0.0f
+//                )
+//                zoomX.interpolator = OvershootInterpolator()
+//                zoomX.duration = 500L
+//                zoomX.doOnEnd { screen.remove() }
+//
+//                val zoomY = ObjectAnimator.ofFloat(
+//                    screen.iconView,
+//                    View.SCALE_Y,
+//                    0.4f,
+//                    0.0f
+//                )
+//                zoomY.interpolator = OvershootInterpolator()
+//                zoomY.duration = 500L
+//                zoomY.doOnEnd { screen.remove() }
+//
+//                zoomX.start()
+//                zoomY.start()
+//            }
+//        }
         setContent {
 
-            if(isBound){
+            if (isBound) {
 
-                StudyRaysTheme(dynamicColor = false) {
+                StudyRaysTheme(dynamicColor = false, darkTheme = true) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = if (isSystemInDarkTheme()) Color.Black else MaterialTheme.colorScheme.background
@@ -112,7 +106,6 @@ class MainActivity : ComponentActivity() {
 
                         val startDestination by viewModel.startDestination.collectAsState()
                         val isActive by networkManager.isVpnActive.collectAsState()
-                        val toNavigate by viewModel.navigate.collectAsState()
                         val navController = rememberNavController()
 
                         if (isActive) {
@@ -120,21 +113,26 @@ class MainActivity : ComponentActivity() {
                                 networkManager.checkVpnState()
                             }
                         } else {
-                            if (toNavigate) {
-                                BottomBarNavigationScreen(
-                                    startDestination = NavRoutes.keyGenerationScreen,
-                                    navController1 = navController,
-                                    timerService = timerService
-                                )
-                            } else {
-                                BottomBarNavigationScreen(
-                                    startDestination = startDestination,
-                                    navController1 = navController,
-                                    timerService = timerService
-                                )
-                            }
-                        }
 
+
+//                            LazyColumn {
+//                                items(10) {
+//                                    LoadingCourseCardInClass()
+//                                }
+//                            }
+
+//                            FilterBatchUI(
+//                                onCLick = {batchIdd, slug, classValuee, name ->
+//
+//                                }
+//                            )
+
+                            BottomBarNavigationScreen(
+                                startDestination = startDestination,
+                                navController1 = navController,
+                                timerService = timerService
+                            )
+                        }
                     }
                 }
             }
@@ -155,14 +153,11 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         networkManager.checkVpnState()
         viewModel.getStartDestination()
-        viewModel.checkStartDestination()
     }
 
     override fun onStart() {
         super.onStart()
         networkManager.checkVpnState()
-        viewModel.getStartDestination()
-        viewModel.checkStartDestination()
         Intent(this, StudySessionTimerService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
@@ -173,7 +168,6 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         networkManager.checkVpnState()
         viewModel.getStartDestination()
-        viewModel.checkStartDestination()
     }
 
 

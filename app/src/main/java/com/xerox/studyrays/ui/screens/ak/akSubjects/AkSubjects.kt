@@ -42,14 +42,18 @@ fun AkSubjects(
     bid: Int,
     onClick: (Int, Int) -> Unit,
     onBackClick: () -> Unit,
-
-    ) {
-
-    LaunchedEffect(key1 = Unit) {
-        vm.getAkSubject(bid)
-    }
+) {
 
     val state by vm.akSubject.collectAsState()
+    val result = state
+
+    LaunchedEffect(key1 = Unit) {
+        if (result !is Response.Success) {
+            vm.getAkSubject(bid)
+        }
+    }
+
+
     val snackBarHostState = remember { SnackbarHostState() }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -73,7 +77,7 @@ fun AkSubjects(
         }
     ) { it ->
 
-        when (val result = state) {
+        when (result) {
             is Response.Error -> {
 
                 DataNotFoundScreen(

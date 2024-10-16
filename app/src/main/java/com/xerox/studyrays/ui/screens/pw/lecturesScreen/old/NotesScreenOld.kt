@@ -56,13 +56,17 @@ fun NotesScreenOld(
     onPdfDownloadClicked: (String?, String?) -> Unit,
 ) {
 
+    val state by vm.notesOld.collectAsState()
+    val notesResult = state
+
     LaunchedEffect(key1 = Unit) {
-        vm.getAllNotesOld(slug)
+        if (notesResult !is Response.Success) {
+            vm.getAllNotesOld(slug)
+        }
 
     }
 
-    val state by vm.notesOld.collectAsState()
-    val notesResult = state
+
     var searchText by rememberSaveable { mutableStateOf("") }
     Column(modifier = Modifier.fillMaxSize()) {
         when (notesResult) {
@@ -116,12 +120,12 @@ fun NotesScreenOld(
                                 EachCardForNotes(title = it.topic,
                                     onViewPdfClicked = {
                                         onPdfViewClicked(
-                                            it.baseUrl + it.attachmentKey,
+                                            it.attachment_base_url + it.attachment_key,
                                             it.topic ?: ""
                                         )
                                     }) {
                                     onPdfDownloadClicked(
-                                        it.baseUrl + it.attachmentKey,
+                                        it.attachment_base_url + it.attachment_key,
                                         it.topic ?: ""
                                     )
                                 }

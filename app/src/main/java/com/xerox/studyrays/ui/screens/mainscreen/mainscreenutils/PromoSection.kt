@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.xerox.studyrays.cacheDb.mainScreenCache.promoDb.PromoEntity
+import com.xerox.studyrays.model.pwModel.PromoItem
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.utils.shimmerEffect
@@ -47,7 +47,15 @@ fun Promo(
 ) {
     val context = LocalContext.current
     val state by vm.promo.collectAsState()
-    when (val result = state) {
+    val result = state
+
+    LaunchedEffect(key1 = Unit) {
+        if(result !is Response.Success){
+            vm.getAllPromoItems()
+        }
+    }
+
+    when (result) {
         is Response.Error -> {
 
         }
@@ -85,7 +93,7 @@ fun Promo(
                         }) {
                         vm.openUrl(
                             context,
-                            result.data[pagerState.currentPage]!!.redirectionLink!!
+                            result.data[pagerState.currentPage]!!.redirection_link!!
                         )
                     }
 
@@ -101,7 +109,7 @@ fun Promo(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PromoSection(
-    list: List<PromoEntity?>?,
+    list: List<PromoItem?>?,
     state: PagerState,
     isOpen: Boolean,
     onClick: () -> Unit,
@@ -139,7 +147,7 @@ fun PromoSection(
                     state = state
                 ) { currentPage ->
                     AsyncImage(
-                        model = list.get(currentPage)?.imageUrl,
+                        model = list.get(currentPage)?.image_url,
                         contentDescription = "",
                         modifier = Modifier
                             .padding(horizontal = 25.dp, vertical = 10.dp)
@@ -162,7 +170,7 @@ fun PromoSection(
 
 @Composable
 fun PromoSectionAlertDialog(
-    item: PromoEntity,
+    item: PromoItem,
     isOpen: Boolean,
     onDismissRequest: () -> Unit,
     onButtonClicked: () -> Unit,
@@ -177,7 +185,7 @@ fun PromoSectionAlertDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     AsyncImage(
-                        model = item.imageUrl,
+                        model = item.image_url,
                         contentDescription = "",
                         modifier = Modifier
                             .clip(
@@ -197,7 +205,7 @@ fun PromoSectionAlertDialog(
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    if (item.redirectionLink != null) {
+                    if (item.redirection_link != null) {
                         OutlinedButton(onClick = {
                             onButtonClicked()
                         }) {

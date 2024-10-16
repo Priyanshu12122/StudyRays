@@ -1,6 +1,7 @@
 package com.xerox.studyrays.ui.screens.khazana.khazanaLecturesScreen
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,14 +13,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
 import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForNotes
+import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForNotesLoading
+import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForVideo3Loading
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.LoadingTemplate
 import com.xerox.studyrays.utils.NoFilesFoundScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -33,15 +38,19 @@ fun KhazanaDppScreen(
     snackBarHostState: SnackbarHostState,
     paddingValues: PaddingValues,
     onPdfViewClicked: (String, String) -> Unit,
-    onPdfDownloadClicked: (String?,String?) -> Unit
+    onPdfDownloadClicked: (String?, String?) -> Unit
 ) {
-
-    LaunchedEffect(key1 = Unit){
-        vm.getKhazanaDpp(subjectId, chapterId, topicId, topicName = topicName)
-    }
 
     val dppState by vm.khazanaDpp.collectAsState()
     val dppResult = dppState
+
+    LaunchedEffect(key1 = Unit) {
+        if (dppResult !is Response.Success) {
+            vm.getKhazanaDpp(subjectId, chapterId, topicId, topicName = topicName)
+        }
+    }
+
+
 
     Column(modifier = Modifier.fillMaxSize()) {
         when (dppResult) {
@@ -62,42 +71,51 @@ fun KhazanaDppScreen(
             }
 
             is Response.Loading -> {
-                LoadingScreen(paddingValues = PaddingValues())
+
+                LoadingTemplate() {
+                    EachCardForNotesLoading()
+                }
+
+//                LoadingScreen(paddingValues = PaddingValues())
 
             }
 
             is Response.Success -> {
-                if (dppResult.data?.dpps?.isEmpty() == true && dppResult.data.notes.isEmpty()){
+
+
+                if (dppResult.data?.dpps?.isEmpty() == true && dppResult.data.notes.isEmpty()) {
                     NoFilesFoundScreen()
                 } else {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                     ) {
+                        val list = remember { dppResult.data?.dpps?.distinctBy { it.url } ?: emptyList() }
+                        val list2 = remember { dppResult.data?.notes?.distinctBy { it.url } ?: emptyList() }
                         LazyColumn {
 //                            Dpps
-                            items(dppResult.data?.dpps ?: emptyList()) {
+                            items(list) {
                                 EachCardForNotes(title = it.title,
                                     onViewPdfClicked = {
-                                        onPdfViewClicked(it.url,it.title)
-                                    }){
-                                    onPdfDownloadClicked(it.url,it.title)
+                                        onPdfViewClicked(it.url, it.title)
+                                    }) {
+                                    onPdfDownloadClicked(it.url, it.title)
                                 }
                             }
 //                            Notes
-                            items(dppResult.data?.notes ?: emptyList()) {
+                            items(list2) {
                                 EachCardForNotes(title = it.title,
                                     onViewPdfClicked = {
-                                        onPdfViewClicked(it.url ?: "",it.title ?: "")
-                                    }){
-                                    onPdfDownloadClicked(it.url,it.title)
+                                        onPdfViewClicked(it.url ?: "", it.title ?: "")
+                                    }) {
+                                    onPdfDownloadClicked(it.url, it.title)
                                 }
                             }
                         }
                     }
 
                 }
-                }
+            }
 //            }
 
             else -> {

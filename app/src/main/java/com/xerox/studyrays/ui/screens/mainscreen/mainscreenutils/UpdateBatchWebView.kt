@@ -6,6 +6,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import com.xerox.studyrays.utils.SpacerHeight
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -42,36 +44,42 @@ fun UpdateBatchWebView(modifier: Modifier = Modifier) {
                 )
             }
         }
-        AndroidView(
-            factory = { context ->
-                WebView(context).apply {
-                    webViewClient = object : WebViewClient() {
-                        override fun shouldOverrideUrlLoading(
-                            view: WebView?,
-                            request: WebResourceRequest?,
-                        ): Boolean {
-                            return super.shouldOverrideUrlLoading(view, request)
+
+        Column {
+
+            SpacerHeight(dp = 20.dp)
+
+            AndroidView(
+                factory = { context ->
+                    WebView(context).apply {
+                        webViewClient = object : WebViewClient() {
+                            override fun shouldOverrideUrlLoading(
+                                view: WebView?,
+                                request: WebResourceRequest?,
+                            ): Boolean {
+                                return super.shouldOverrideUrlLoading(view, request)
+                            }
                         }
-                    }
 
 
-                    webChromeClient = object : WebChromeClient() {
-                        override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                            super.onProgressChanged(view, newProgress)
-                            // Progress changed
-                            progress = newProgress
-                            isLoading = newProgress != 100
+                        webChromeClient = object : WebChromeClient() {
+                            override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                                super.onProgressChanged(view, newProgress)
+                                // Progress changed
+                                progress = newProgress
+                                isLoading = newProgress != 100
+                            }
                         }
-                    }
 
-                    settings.javaScriptEnabled = true
-                    loadUrl(taskUrl)
-                }
-            },
-            update = {
-                it.loadUrl(taskUrl)
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+                        settings.javaScriptEnabled = true
+                        loadUrl(taskUrl)
+                    }
+                },
+                update = {
+                    it.loadUrl(taskUrl)
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }

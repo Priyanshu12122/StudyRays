@@ -36,14 +36,14 @@ fun ActualLecturesScreenOld(
     onVideoClicked: (String, String, String, String, String, String, String, String, String) -> Unit,
 ) {
 
-
-    LaunchedEffect(key1 = Unit) {
-        vm.getAllVideosOld(slug)
-    }
-
-
     val videosState by vm.videosOld.collectAsState()
     val videosResult = videosState
+
+    LaunchedEffect(key1 = Unit) {
+        if(videosResult !is Response.Success){
+            vm.getAllVideosOld(slug)
+        }
+    }
 
 
     var searchText by rememberSaveable {

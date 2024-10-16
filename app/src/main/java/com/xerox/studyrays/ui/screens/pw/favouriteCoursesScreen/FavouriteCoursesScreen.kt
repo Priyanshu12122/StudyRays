@@ -1,7 +1,6 @@
 package com.xerox.studyrays.ui.screens.pw.favouriteCoursesScreen
 
 import android.os.Build
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,11 +59,14 @@ fun FavouriteCoursesScreen(
     vm: MainViewModel = hiltViewModel(),
     onBackClicked: () -> Unit,
     onKhazanaClick: (subjectId: String, chapterId: String, imageUrl: String, courseName: String) -> Unit,
-    onCLick: (String, String) -> Unit,
+    onCLick: (String, String, String, String) -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
+    onOldClick: (String, String) -> Unit,
 ) {
     val context = LocalContext.current
-    val favCoursesId by vm.allFavCourses.collectAsState()
+//    val favCoursesId by vm.allFavCourses.collectAsState()
     val allSubjects by vm.favSubjects.collectAsState()
+    val subjects = allSubjects
 
     val tabListRow = listOf(
         "Physics Wallah",
@@ -75,14 +77,13 @@ fun FavouriteCoursesScreen(
 
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(key1 = favCoursesId) {
-        vm.getAllFavCourses()
-
-        if (favCoursesId != null) {
-            favCoursesId?.forEach {
-                vm.getAllFavSubjects(it?.externalId ?: "")
+    LaunchedEffect(key1 = Unit) {
+            vm.getAllFavSubjects()
+        vm.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
             }
-        }
+        )
     }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -128,7 +129,7 @@ fun FavouriteCoursesScreen(
                 when (page) {
                     0 -> {
 
-                        when (val subjects = allSubjects) {
+                        when (subjects) {
                             is ResponseTwo.Error -> {
                                 val messageState = rememberMessageBarState()
 
@@ -138,7 +139,8 @@ fun FavouriteCoursesScreen(
                                     paddingValues = it,
                                     shouldShowBackButton = true,
                                     onRetryClicked = {
-                                        processFavCourses(vm = vm, favCoursesId = favCoursesId)
+                                        vm.getAllFavSubjects()
+//                                        processFavCourses(vm = vm, favCoursesId = favCoursesId)
                                     }) {
                                     onBackClicked()
                                 }
@@ -218,7 +220,14 @@ fun FavouriteCoursesScreen(
                                                         onFavouriteIconClicked = { value ->
                                                             vm.onFavoriteClick(
                                                                 FavouriteCourse(
-                                                                    externalId = value
+                                                                    externalId = value,
+                                                                    name = batchItem.name,
+                                                                    language = batchItem.language,
+                                                                    imageUrl = batchItem.imageUrl,
+                                                                    byName = batchItem.byName,
+                                                                    slug = batchItem.slug,
+                                                                    classValue = batchItem.classValue,
+                                                                    isOld = batchItem.isOld,
                                                                 )
                                                             )
                                                             savedStatusMap[batchItem.externalId] =
@@ -232,19 +241,29 @@ fun FavouriteCoursesScreen(
                                                         checkIfSaved = {
                                                             scope.launch {
                                                                 val saved =
-                                                                    vm.checkIfItemIsPresentInDb(
-                                                                        FavouriteCourse(it)
-                                                                    )
+                                                                    vm.checkIfItemIsPresentInDb(it)
                                                                 savedStatusMap[batchItem.externalId] =
                                                                     saved
                                                             }
+                                                        },
+                                                        onCLick = {
+                                                            if (batchItem.isOld) {
+                                                                onOldClick(
+                                                                    batchItem.externalId,
+                                                                    batchItem.name
+                                                                )
+                                                            } else {
+
+                                                                onCLick(
+                                                                    batchItem.externalId,
+                                                                    batchItem.name,
+                                                                    batchItem.slug,
+                                                                    batchItem.classValue
+                                                                )
+                                                            }
+
                                                         }
-                                                    ) {
-                                                        onCLick(
-                                                            batchItem.externalId,
-                                                            batchItem.name ?: "Name"
-                                                        )
-                                                    }
+                                                    )
                                                 }
 
                                             }
@@ -276,16 +295,18 @@ fun FavouriteCoursesScreen(
             }
         }
     }
+
+
 }
 
-fun processFavCourses(vm: MainViewModel, favCoursesId: List<FavouriteCourse?>?) {
-    vm.getAllFavCourses()
-
-    if (favCoursesId != null) {
-        favCoursesId.forEach {
-            vm.getAllFavSubjects(it?.externalId ?: "")
-        }
-    } else {
-        Log.d("TAG", "FavouriteCoursesScreen: all ids are nulll")
-    }
-}
+//fun processFavCourses(vm: MainViewModel, favCoursesId: List<FavouriteCourse?>?) {
+//    vm.getAllFavCourses()
+//
+//    if (favCoursesId != null) {
+//        favCoursesId.forEach {
+//            vm.getAllFavSubjects(it?.externalId ?: "")
+//        }
+//    } else {
+//        Log.d("TAG", "FavouriteCoursesScreen: all ids are nulll")
+//    }
+//}

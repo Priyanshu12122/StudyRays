@@ -2,12 +2,9 @@ package com.xerox.studyrays.ui.screens.ak.akIndex
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -25,25 +22,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.stevdzasan.messagebar.rememberMessageBarState
-import com.xerox.studyrays.R
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.ak.AkViewModel
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
 import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
-import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,11 +43,16 @@ fun AkIndex(
     onBackClick: () -> Unit,
 ) {
 
+    val state by vm.index.collectAsState()
+    val result = state
+
     LaunchedEffect(key1 = Unit) {
-        vm.getIndex()
+        if (result !is Response.Success) {
+            vm.getIndex()
+        }
     }
 
-    val state by vm.index.collectAsState()
+
     val snackBarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -95,7 +88,7 @@ fun AkIndex(
         }
     ) { paddingValues ->
 
-        when (val result = state) {
+        when (result) {
 
             is Response.Error -> {
 
@@ -120,7 +113,7 @@ fun AkIndex(
                         .fillMaxSize()
                 ) {
 
-                    if (result.data.data.batchData.isEmpty()) {
+                    if (result.data.data == null || result.data.data.batchData.isNullOrEmpty()) {
                         NoFilesFoundScreen()
                     } else {
 

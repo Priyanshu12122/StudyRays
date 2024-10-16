@@ -1,6 +1,5 @@
 package com.xerox.studyrays.ui.screens.pw.classesscreen
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -39,7 +38,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,14 +47,17 @@ import com.xerox.studyrays.cacheDb.mainScreenCache.searchSectionDb.SearchEntity
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.SearchSection
 import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.SearchSectionOld
+import com.xerox.studyrays.ui.screens.pw.lecturesScreen.old.FilterBatchUI
 import com.xerox.studyrays.utils.CategoryTabRow2
 import com.xerox.studyrays.utils.EachCardForClass
+import com.xerox.studyrays.utils.MatchTabs
 import com.xerox.studyrays.utils.SearchTextField2
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-    ExperimentalLayoutApi::class
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class,
 )
 @Composable
 fun ClassesScreen(
@@ -64,15 +65,14 @@ fun ClassesScreen(
     shouldShow: Boolean,
     onBackClicked: () -> Unit,
     onBatchClicked: (String, String, String, String) -> Unit,
+    onActualCourseClicked: (String, String, String, String) -> Unit,
     onOldBatchClick: (String, String) -> Unit,
-    onEachCardOfOldBatchClicked: (String, Boolean) -> Unit,
-    onEachCardClicked: (String, Boolean) -> Unit,
+    onEachCardOfOldBatchClicked: (String) -> Unit,
+    onEachCardClicked: (String) -> Unit,
 
     ) {
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var searchText by rememberSaveable {
-        mutableStateOf("")
-    }
 
     val cacheState by vm.cacheSearch.collectAsState()
 
@@ -83,7 +83,7 @@ fun ClassesScreen(
 
     val list = remember {
         listOf(
-            EachCardForClass(R.drawable.thirteen, "13"),
+            EachCardForClass(R.drawable.thirteen, "dropper"),
             EachCardForClass(R.drawable.twelve, "12"),
             EachCardForClass(R.drawable.eleven, "11"),
             EachCardForClass(R.drawable.ten, "10"),
@@ -93,6 +93,19 @@ fun ClassesScreen(
             EachCardForClass(R.drawable.six, "6")
         )
     }
+
+//    val list2 = remember {
+//        listOf(
+//            EachCardForClass(R.drawable.thirteen, "13"),
+//            EachCardForClass(R.drawable.twelve, "12"),
+//            EachCardForClass(R.drawable.eleven, "11"),
+//            EachCardForClass(R.drawable.ten, "10"),
+//            EachCardForClass(R.drawable.nine, "9"),
+//            EachCardForClass(R.drawable.eight, "8"),
+//            EachCardForClass(R.drawable.seven, "7"),
+//            EachCardForClass(R.drawable.six, "6")
+//        )
+//    }
 
     Scaffold(
         modifier = Modifier
@@ -125,108 +138,145 @@ fun ClassesScreen(
                     scrollBehavior = scrollBehavior
                 )
             }
-        }) {
+        }) { paddingValues ->
 
+        val textList = listOf(
+            "Search Pw Courses",
+            "Search for CA Intermediate Udesh Batch",
+            "Search for Yakeen NEET 2.0 2024",
+            "Search Gate 2025 Preperation"
+        )
         Column(
             modifier = Modifier
-                .padding(it)
+                .padding(paddingValues)
                 .fillMaxSize()
         ) {
 
-            CategoryTabRow2(pagerState = pagerState, categories = tabList,
-                onTabClicked = {
+//            CategoryTabRow2(pagerState = pagerState, categories = tabList,
+//                onTabClicked = {
+//                    scope.launch {
+//                        pagerState.animateScrollToPage(it)
+//                    }
+//                })
+
+            MatchTabs(
+                tabs = tabList,
+                pagerState = pagerState,
+                onTabSelected = {
                     scope.launch {
                         pagerState.animateScrollToPage(it)
                     }
-                })
+                }
+            )
 
             HorizontalPager(state = pagerState) { page ->
                 when (page) {
 
                     0 -> {
-                        Column {
 
-                            var isFocused by remember {
-                                mutableStateOf(false)
-                            }
+                        FilterBatchUI(
+                            onCLick = { id, name, classValue, slugg ->
+                                onActualCourseClicked(id, name, classValue, slugg)
+                            },
 
-                            LaunchedEffect(searchText) {
-                                if (searchText.length >= 3) {
-                                    delay(500)
-                                    vm.getQuery(query = searchText)
-                                    vm.insertSearchItem(SearchEntity(searchText = searchText))
-                                }
-                            }
+                        )
 
-                            SearchTextField2(
-                                searchText = searchText,
-                                onSearchTextChanged = { searchText = it },
-                                onCrossIconClicked = {
-                                    searchText = ""
-                                    vm.removeQueries()
-                                },
-                                text = "Search Pw Batches",
-                                onSearch = {
-                                    vm.getQuery(query = searchText)
-                                    vm.insertSearchItem(SearchEntity(searchText = searchText))
-                                },
-                                onFocused = {
-                                    isFocused = true
-                                },
-                                onUnFocused = {
-                                    isFocused = false
-                                }
-                            )
-
-
-                            if(isFocused){
-                                FlowRow(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
-                                ) {
-                                    cacheState?.forEach { searchEntity ->
-
-                                        AssistChip(onClick = { searchText = searchEntity.searchText }, label = {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.Center
-                                            ) {
-                                                Text(
-                                                    searchEntity.searchText,
-                                                    fontSize = 14.sp,
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
-                                                IconButton(onClick = {
-                                                    vm.deleteSearchItem(searchEntity)
-                                                }, modifier = Modifier.size(16.dp)) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Close,
-                                                        contentDescription = "Close",
-                                                    )
-                                                }
-                                            }
-                                        })
-                                    }
-                                }
-                            }
-
-
-
-                            SearchSection(onBatchClick = { id, name, classValue, slugg ->
-                                onBatchClicked(id, name, classValue, slugg)
-                            })
-
-
-                            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-                                items(list, key = { it.text }) { eachClass ->
-
-                                    EachClassCard(image = eachClass.image, text = eachClass.text) {
-                                        onEachCardClicked(eachClass.text, false)
-                                    }
-                                }
-                            }
-                        }
+//                        Column {
+//
+//                            var isFocused by remember {
+//                                mutableStateOf(false)
+//                            }
+//
+//                            var searchText by rememberSaveable {
+//                                mutableStateOf("")
+//                            }
+//
+//                            LaunchedEffect(searchText) {
+//                                if (searchText.length >= 3) {
+//                                    delay(500)
+//                                    vm.getQuery(query = searchText)
+//                                    vm.insertSearchItem(SearchEntity(searchText = searchText))
+//                                }
+//                            }
+//
+//                            SearchTextField2(
+//                                searchText = searchText,
+//                                onSearchTextChanged = { searchText = it },
+//                                onCrossIconClicked = {
+//                                    searchText = ""
+//                                    vm.removeQueries()
+//                                },
+//                                text = textList,
+//                                onSearch = {
+//                                    vm.getQuery(query = searchText)
+//                                    vm.insertSearchItem(SearchEntity(searchText = searchText))
+//                                },
+//                                onFocused = {
+//                                    isFocused = true
+//                                },
+//                                onUnFocused = {
+//                                    isFocused = false
+//                                }
+//                            )
+//
+//
+//                            if (isFocused) {
+//                                FlowRow(
+//                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+//                                    modifier = Modifier.padding(
+//                                        start = 20.dp,
+//                                        end = 20.dp,
+//                                        bottom = 8.dp
+//                                    )
+//                                ) {
+//                                    cacheState?.forEach { searchEntity ->
+//
+//                                        AssistChip(onClick = {
+//                                            searchText = searchEntity.searchText
+//                                        }, label = {
+//                                            Row(
+//                                                verticalAlignment = Alignment.CenterVertically,
+//                                                horizontalArrangement = Arrangement.Center
+//                                            ) {
+//                                                Text(
+//                                                    searchEntity.searchText,
+//                                                    fontSize = 14.sp,
+//                                                )
+//                                                Spacer(modifier = Modifier.width(4.dp))
+//                                                IconButton(onClick = {
+//                                                    vm.deleteSearchItem(searchEntity)
+//                                                }, modifier = Modifier.size(16.dp)) {
+//                                                    Icon(
+//                                                        imageVector = Icons.Default.Close,
+//                                                        contentDescription = "Close",
+//                                                    )
+//                                                }
+//                                            }
+//                                        }
+//                                        )
+//                                    }
+//                                }
+//                            }
+//
+//
+//                            SearchSection(onBatchClick = { id, name, classValue, slugg ->
+//                                onBatchClicked(id, name, classValue, slugg)
+//                            })
+//
+//
+//                            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+//                                items(list, key = { it.text }) { eachClass ->
+//
+//                                    EachClassCard(
+//                                        image = eachClass.image,
+//                                        text = eachClass.text,
+//                                    ) {
+//                                        onEachCardClicked(eachClass.text)
+//                                    }
+//                                }
+//                            }
+//                        }
                     }
 
 
@@ -238,10 +288,14 @@ fun ClassesScreen(
                                 mutableStateOf(false)
                             }
 
+                            var searchText by rememberSaveable {
+                                mutableStateOf("")
+                            }
+
                             LaunchedEffect(searchText) {
                                 if (searchText.length >= 3) {
                                     delay(500)
-                                    vm.getQuery(query = searchText)
+                                    vm.getQueryOld(query = searchText)
                                     vm.insertSearchItem(SearchEntity(searchText = searchText))
                                 }
                             }
@@ -251,9 +305,9 @@ fun ClassesScreen(
                                 onSearchTextChanged = { searchText = it },
                                 onCrossIconClicked = {
                                     searchText = ""
-                                    vm.removeQueries()
+                                    vm.removeQueriesOld()
                                 },
-                                text = "Search Pw Batches",
+                                text = textList,
                                 onSearch = {
                                     vm.getQueryOld(query = searchText)
                                     vm.insertSearchItem(SearchEntity(searchText = searchText))
@@ -266,15 +320,21 @@ fun ClassesScreen(
                                 }
                             )
 
-                            if(isFocused){
+                            if (isFocused) {
                                 FlowRow(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
+                                    modifier = Modifier.padding(
+                                        start = 20.dp,
+                                        end = 20.dp,
+                                        bottom = 8.dp
+                                    )
                                 ) {
                                     cacheState?.forEach { searchEntity ->
 
-                                        AssistChip(onClick = { searchText = searchEntity.searchText }, label = {
+                                        AssistChip(onClick = {
+                                            searchText = searchEntity.searchText
+                                        }, label = {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.Center
@@ -293,7 +353,8 @@ fun ClassesScreen(
                                                     )
                                                 }
                                             }
-                                        })
+                                        }
+                                        )
                                     }
                                 }
                             }
@@ -307,8 +368,11 @@ fun ClassesScreen(
                             LazyVerticalGrid(columns = GridCells.Fixed(2)) {
                                 items(list, key = { it.text }) { eachClass ->
 
-                                    EachClassCard(image = eachClass.image, text = eachClass.text) {
-                                        onEachCardOfOldBatchClicked(eachClass.text, true)
+                                    EachClassCard(
+                                        image = eachClass.image,
+                                        text = eachClass.text,
+                                    ) {
+                                        onEachCardOfOldBatchClicked(eachClass.text)
                                     }
                                 }
                             }

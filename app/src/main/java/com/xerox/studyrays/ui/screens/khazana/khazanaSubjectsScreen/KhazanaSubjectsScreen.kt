@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,8 +28,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
+import com.xerox.studyrays.ui.screens.pw.chaptersScreen.EachCardForChapterLoading
+import com.xerox.studyrays.ui.screens.pw.subjectsAndTeachersScreen.EachCardForSubjectLoading
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.LoadingTemplate
 import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 
@@ -42,11 +46,16 @@ fun KhazanaSubjectsScreen(
     onClick: (String, String) -> Unit,
 ) {
 
+    val khazanaSubjectState by vm.khazanaSubject.collectAsState()
+    val result = khazanaSubjectState
+
     LaunchedEffect(key1 = Unit) {
-        vm.getKhazanaSubjects(slug)
+        if (result !is Response.Success) {
+            vm.getKhazanaSubjects(slug)
+        }
     }
 
-    val khazanaSubjectState by vm.khazanaSubject.collectAsState()
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val snackBarHostState = remember { SnackbarHostState() }
 
@@ -75,7 +84,7 @@ fun KhazanaSubjectsScreen(
     ) {
 
 
-        when (val result = khazanaSubjectState) {
+        when (result) {
             is Response.Error -> {
                 val messageState = rememberMessageBarState()
 
@@ -93,7 +102,10 @@ fun KhazanaSubjectsScreen(
             }
 
             is Response.Loading -> {
-                LoadingScreen(paddingValues = it)
+
+                LoadingTemplate(paddingValues = it) {
+                    EachCardForChapterLoading()
+                }
             }
 
             is Response.Success -> {

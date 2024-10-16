@@ -14,9 +14,8 @@ import com.onesignal.OneSignal
 import com.onesignal.debug.LogLevel
 import com.xerox.studyrays.data.ApiRepository
 import com.xerox.studyrays.utils.Constants
-import com.xerox.studyrays.workmanager.AkWorker
 import com.xerox.studyrays.workmanager.FetchDataWorker
-import com.xerox.studyrays.workmanager.PwWorker
+import com.xerox.studyrays.workmanager.LeaderBoardUploadWorker
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,54 +55,30 @@ internal class BaseApp : Application(), Configuration.Provider {
             )
             .build()
 
-        val akWorkRequest = PeriodicWorkRequestBuilder<AkWorker>(12, TimeUnit.HOURS)
-            .setConstraints(constraints)
-            .setBackoffCriteria(
-                backoffPolicy = BackoffPolicy.LINEAR,
-                15,
-                TimeUnit.MINUTES
-            )
-            .build()
 
-        val pwWorker = PeriodicWorkRequestBuilder<PwWorker>(12, TimeUnit.HOURS)
-            .setConstraints(constraints)
-            .setBackoffCriteria(
-                backoffPolicy = BackoffPolicy.LINEAR,
-                15,
-                TimeUnit.MINUTES
-            )
-            .build()
+//        val leaderBoardWorker =
+//            PeriodicWorkRequestBuilder<LeaderBoardUploadWorker>(1, TimeUnit.HOURS)
+//                .setConstraints(constraints)
+//                .setBackoffCriteria(
+//                    backoffPolicy = BackoffPolicy.LINEAR,
+//                    15,
+//                    TimeUnit.MINUTES
+//                )
+//                .build()
 
-//        val taskWorker = PeriodicWorkRequestBuilder<TaskWorker>(15, TimeUnit.MINUTES)
-//            .setBackoffCriteria(
-//                backoffPolicy = BackoffPolicy.LINEAR,
-//                15,
-//                TimeUnit.MINUTES
-//            )
-//            .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "FetchDataWork",
             ExistingPeriodicWorkPolicy.KEEP,
             fetchWorkRequest
         )
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "AkWork",
-            ExistingPeriodicWorkPolicy.KEEP,
-            akWorkRequest
-        )
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "PwWork",
-            ExistingPeriodicWorkPolicy.KEEP,
-            pwWorker
-        )
 
 //        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-//            "TaskWork",
+//            "Leaderboard work",
 //            ExistingPeriodicWorkPolicy.KEEP,
-//            taskWorker
+//            leaderBoardWorker
 //        )
+
     }
 
     override val workManagerConfiguration: Configuration

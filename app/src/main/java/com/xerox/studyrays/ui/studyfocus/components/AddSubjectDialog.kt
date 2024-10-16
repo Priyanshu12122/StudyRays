@@ -1,4 +1,4 @@
-package com.example.studysmart.presentation.components
+package com.xerox.studyrays.ui.studyfocus.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

@@ -3,6 +3,11 @@ package com.xerox.studyrays.ui.theme
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.toColorInt
 
+val BackGroundBlack = Color(0xFF131319)
+
+val NavyBlue = Color(0xFF000080)
+val NeonYellow = Color(0xFFE3FF00)
+
 val md_theme_light_primary = Color(0xFF5646D6)
 val md_theme_light_onPrimary = Color(0xFFFFFFFF)
 val md_theme_light_primaryContainer = Color(0xFFE4DFFF)
@@ -96,6 +101,13 @@ val Red = Color(0xFFD53A2F)
 val Blue = Color(0xFF2965C9)
 val Green = Color(0xFF1E9651)
 val Orange = Color(0xFFFF9800)
+
+
+val DarkTeal = Color(0xFF253334)
+val LightTeal = Color(0xFF92999A)
+
+val DeepBlackBlue = Color(0xFF0D0D28)
+val WhiteModeDeepBlackBlue = Color(0xFFFFFBFF)
 
 val gradient1 = listOf(Color(0xFFad5389), Color(0xFF3c1053))
 val gradient2 = listOf(Color(0xFF3A6073), Color(0xFF16222A))

@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -52,6 +51,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -68,9 +68,9 @@ import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.screens.videoPlayerScreen.VideoViewModel
 import com.xerox.studyrays.ui.theme.MainPurple
 import com.xerox.studyrays.utils.CategoryTabRow2
-import com.xerox.studyrays.utils.CompletedIconButton
 import com.xerox.studyrays.utils.SpacerWidth
 import com.xerox.studyrays.utils.WatchLaterButton
+import com.xerox.studyrays.utils.shimmerEffect
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -87,15 +87,18 @@ fun LecturesScreen(
     name: String,
     onVideoClicked: (String, String, String, String, String, String, String, String, String) -> Unit,
     onPdfViewClicked: (String, String) -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
     onBackClicked: () -> Unit,
 ) {
 
+
     LaunchedEffect(key1 = Unit) {
-        vm.getAllVideos(
-            batchId = batchId,
-            subjectSlug = subjectSlug,
-            topicSlug = topicSlug
+        vm.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
+            }
         )
+
     }
 
     val context = LocalContext.current
@@ -104,6 +107,7 @@ fun LecturesScreen(
     }
 
     val downloader = AndroidDownloader(context)
+
 
     val showNotificationDialog = rememberSaveable { mutableStateOf(false) }
     val permissionState =
@@ -201,6 +205,21 @@ fun LecturesScreen(
                             }
                         ) { downloadId, name ->
 
+//                            val downloadCallback = object : DownloadCallback {
+//                                override fun onDownloadStarted(id: Long) {
+//                                    Toast.makeText(context, "Download started with id $id", Toast.LENGTH_LONG).show()
+////                                    Log.d("DownloadCallback", "Download started with id $id")
+//                                }
+//
+//                                override fun onDownloadCompleted(id: Long) {
+//                                    Toast.makeText(context, "Download $id completed", Toast.LENGTH_LONG).show()
+//                                }
+//
+//                                override fun onDownloadFailed(id: Long) {
+//                                    Toast.makeText(context, "Download $id failed", Toast.LENGTH_LONG).show()
+//                                }
+//                            }
+//
                             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                                 if (permissionState.hasPermission) {
                                     if (downloadId != null) {
@@ -340,11 +359,15 @@ fun EachCardForVideo(
 
             AsyncImage(
                 model = imageUrl ?: "", contentDescription = "",
+                placeholder = painterResource(id = R.drawable.pwrectangle),
+                error = painterResource(id = R.drawable.pwrectangle),
+                fallback = painterResource(id = R.drawable.pwrectangle),
                 modifier = Modifier
                     .padding(12.dp)
                     .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(8.dp))
                     .weight(4f),
+                contentScale = ContentScale.FillWidth
             )
             Column(
                 modifier = Modifier
@@ -411,6 +434,82 @@ fun EachCardForVideo(
     }
 }
 
+
+@Composable
+fun EachCardForVideo3Loading() {
+
+
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .height(110.dp)
+            .fillMaxWidth()
+            .shadow(
+                elevation = 20.dp,
+                shape = RoundedCornerShape(10.dp),
+                ambientColor = Color.LightGray
+            )
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .then(
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
+            )
+    )
+
+    {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+
+            AsyncImage(
+                model = "", contentDescription = "",
+                modifier = Modifier
+                    .padding(12.dp)
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .weight(4f)
+                    .shimmerEffect(),
+                contentScale = ContentScale.FillWidth
+            )
+
+            Column(
+                modifier = Modifier
+                    .padding(10.dp)
+                    .weight(6f)
+            ) {
+
+                Text(
+                    text = "",
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth()
+                        .shimmerEffect()
+                )
+
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .shimmerEffect()
+                ) {
+
+                }
+
+                LinearProgressIndicator(
+                    progress = { 0f },
+                    modifier = Modifier.height(2.5.dp)
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun EachCardForVideo3(
     imageUrl: String?,
@@ -465,12 +564,17 @@ fun EachCardForVideo3(
 
             AsyncImage(
                 model = imageUrl ?: "", contentDescription = "",
+                placeholder = painterResource(id = R.drawable.pwrectangle),
+                error = painterResource(id = R.drawable.pwrectangle),
+                fallback = painterResource(id = R.drawable.pwrectangle),
                 modifier = Modifier
                     .padding(12.dp)
                     .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(8.dp))
                     .weight(4f),
+                contentScale = ContentScale.FillWidth
             )
+
             Column(
                 modifier = Modifier
                     .padding(10.dp)
@@ -521,7 +625,7 @@ fun EachCardForVideo2(
     duration: String?,
     videoId: String,
     onVideoClicked: () -> Unit,
-    ) {
+) {
 
     Column(
         modifier = Modifier
@@ -558,11 +662,15 @@ fun EachCardForVideo2(
 
             AsyncImage(
                 model = imageUrl ?: "", contentDescription = "",
+                placeholder = painterResource(id = R.drawable.pwrectangle),
+                error = painterResource(id = R.drawable.pwrectangle),
+                fallback = painterResource(id = R.drawable.pwrectangle),
                 modifier = Modifier
                     .padding(12.dp)
                     .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(8.dp))
                     .weight(4f),
+                contentScale = ContentScale.FillWidth
             )
             Column(
                 modifier = Modifier

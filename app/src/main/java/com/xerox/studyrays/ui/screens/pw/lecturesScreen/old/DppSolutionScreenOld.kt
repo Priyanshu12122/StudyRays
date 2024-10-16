@@ -6,22 +6,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -29,7 +23,6 @@ import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForVideo3
-import com.xerox.studyrays.utils.BottomSheet
 import com.xerox.studyrays.utils.Constants
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
@@ -45,14 +38,18 @@ fun DppSolutionScreenOld(
     paddingValues: PaddingValues,
     onClick: (String, String, String, String, String, String, String, String) -> Unit,
 ) {
-    LaunchedEffect(key1 = Unit) {
-        vm.getAllDppSolutionOld(slug)
-    }
 
-    val context = LocalContext.current
     val state by vm.dppSolutionOld.collectAsState()
     val dppSolutionResult = state
-    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(key1 = Unit) {
+        if (dppSolutionResult !is Response.Success){
+            vm.getAllDppSolutionOld(slug)
+        }
+    }
+
+
+
     var searchText by rememberSaveable {
         mutableStateOf("")
     }

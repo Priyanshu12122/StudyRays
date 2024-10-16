@@ -8,8 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -18,18 +16,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
@@ -42,15 +34,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.DarkGray
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
@@ -60,8 +49,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xerox.studyrays.R
-import com.xerox.studyrays.cacheDb.mainScreenCache.searchSectionDb.SearchEntity
 import com.xerox.studyrays.network.ResponseTwo
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.AlertSection
@@ -72,10 +61,9 @@ import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.SearchTopAppBar
 import com.xerox.studyrays.utils.SpacerHeight
 import com.xerox.studyrays.utils.mainScreenItemsList
 import com.xerox.studyrays.utils.navBarList
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudyScreen(
     vm: MainViewModel = hiltViewModel(),
@@ -85,25 +73,26 @@ fun StudyScreen(
     onAkClicked: () -> Unit,
     onUpdateBatchesClicked: () -> Unit,
     onWatchLaterClicked: () -> Unit,
+    onProfileClick: () -> Unit,
     onAllBatchesClicked: () -> Unit,
-) {
 
-    val isInternetAccessible by vm.isInternetAccessible.collectAsState()
+    ) {
+
+    val isInternetAccessible by vm.isInternetAccessible.collectAsStateWithLifecycle()
     val conf = LocalConfiguration.current
+
+    val navItems by vm.navBar.collectAsState()
+    val navBarResult = navItems
 
     LaunchedEffect(key1 = isInternetAccessible) {
         vm.getNavItems()
-        vm.getAllPromoItems()
+//        vm.getAllPromoItems()
         vm.getAlertItem()
-        vm.getTotalFee()
+//        vm.getTotalFee()
         vm.observeInternetAccessibility()
         vm.getStatus()
         vm.onTaskCompleted()
     }
-
-
-    val navItems by vm.navBar.collectAsState()
-    val cacheState by vm.cacheSearch.collectAsState()
 
 
     var backPressedTime by rememberSaveable { mutableLongStateOf(0L) }
@@ -111,28 +100,20 @@ fun StudyScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var searchText by rememberSaveable { mutableStateOf("") }
-    var isSearching by rememberSaveable { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
     val navBarState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var telegramUrl by rememberSaveable { mutableStateOf("") }
     var officialChannelLink by rememberSaveable { mutableStateOf("") }
-
-
-    LaunchedEffect(searchText) {
-        if (searchText.length >= 3) {
-            delay(500)
-            vm.getQuery(query = searchText)
-            vm.insertSearchItem(SearchEntity(searchText = searchText))
-        }
-    }
 
     val list2 = mainScreenItemsList()
 
     ModalNavigationDrawer(
         drawerContent = {
-            ModalDrawerSheet {
-                Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            ModalDrawerSheet(
+            ) {
+                Column(
+                    Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     SpacerHeight(dp = 8.dp)
                     Box(
                         modifier = Modifier
@@ -200,7 +181,7 @@ fun StudyScreen(
 
                     navBarList.forEachIndexed { index, drawerItem ->
 
-                        when (val navBarResult = navItems) {
+                        when (navBarResult) {
                             is ResponseTwo.Error -> {
 
                                 NavDrawerItems(
@@ -282,38 +263,18 @@ fun StudyScreen(
                 if (conf.orientation == Configuration.ORIENTATION_PORTRAIT) {
                     SearchTopAppBar(
                         scrollBehaviour = scrollBehavior,
-                        focusRequester = focusRequester,
-                        searchText = searchText,
-                        isSearching = isSearching,
-                        onCrossIconClicked = {
-                            if (searchText == "") {
-                                isSearching = false
-                            } else {
-                                searchText = ""
-                                vm.removeQueries()
-                            }
-                        },
-                        onDoneClicked = {
-                            if (searchText == "" || searchText.length < 3) {
-                                vm.showToast(context, "Type atleast 3 words to start searching")
-                                return@SearchTopAppBar
-                            }
-                            vm.getQuery(query = searchText)
-                            vm.insertSearchItem(SearchEntity(searchText = searchText))
-                        },
                         onMenuIconClicked = {
                             scope.launch {
                                 navBarState.open()
                             }
                         },
-                        onSearchTextChanged = { searchText = it },
-                        onSearchIconClicked = {
-                            isSearching = true
-                        },
                         onWatchLaterClicked = {
                             onWatchLaterClicked()
+                        },
+                        onProfileClick = {
+                            onProfileClick()
                         }
-                        )
+                    )
 
                 }
             }, modifier = Modifier
@@ -325,18 +286,13 @@ fun StudyScreen(
 
             BackHandler {
                 val currentTime = System.currentTimeMillis()
-                if (isSearching) {
-                    vm.removeQueries()
-                    isSearching = false
-                    searchText = ""
+                if (currentTime - backPressedTime < backPressThreshold) {
+                    (context as ComponentActivity).finish()
                 } else {
-                    if (currentTime - backPressedTime < backPressThreshold) {
-                        (context as ComponentActivity).finish()
-                    } else {
-                        backPressedTime = currentTime
-                        vm.showToast(context, "Press back again to exit StudyRays")
-                    }
+                    backPressedTime = currentTime
+                    vm.showToast(context, "Press back again to exit StudyRays")
                 }
+
             }
 
 //            Alert
@@ -349,44 +305,13 @@ fun StudyScreen(
                     .fillMaxSize()
             ) {
 
-                if (isSearching) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
-                    ) {
-                        cacheState?.forEach { searchEntity ->
-
-                            AssistChip(onClick = { searchText = searchEntity.searchText }, label = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Text(
-                                        searchEntity.searchText,
-                                        fontSize = 14.sp,
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    IconButton(onClick = {
-                                        vm.deleteSearchItem(searchEntity)
-                                    }, modifier = Modifier.size(16.dp)) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Close",
-                                        )
-                                    }
-                                }
-                            })
-                        }
-                    }
-                }
-
-
 //                Search
 
-                SearchSection(onBatchClick = { id, name, classValue, slugg ->
-                    onBatchClick(id, name, classValue, slugg)
-                })
+                SearchSection(
+                    onBatchClick = { id, name, classValue, slugg ->
+                        onBatchClick(id, name, classValue, slugg)
+                    }
+                )
 
                 FeatureSection(
                     list = list2, onFollowOnTelegramClicked = {
@@ -407,7 +332,8 @@ fun StudyScreen(
                     },
                     onUpdateBatchesClicked = {
                         onUpdateBatchesClicked()
-                    }) {
+                    }
+                ) {
                     onAllBatchesClicked()
                 }
             }

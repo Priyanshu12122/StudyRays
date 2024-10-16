@@ -1,6 +1,7 @@
 package com.xerox.studyrays.ui.screens.videoPlayerScreen
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -85,6 +86,23 @@ class VideoViewModel @Inject constructor(
         playerr?.seekTo(time)
     }
 
+    fun getPlayerPosition(): Long{
+        return playerr?.currentPosition ?: 0L
+    }
+
+    fun openYouTubeVideo(context: Context, videoUrl: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)).apply {
+            // This line ensures that the intent opens in the YouTube app if it's available.
+            setPackage("com.google.android.youtube")
+        }
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            // Fallback to the browser if YouTube app is not available
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
+        }
+    }
+
 
     private val playerListener = VideoPlayerListener() {
         if (!_state.value.qualityListGenerated) {
@@ -99,7 +117,7 @@ class VideoViewModel @Inject constructor(
     }
 
 
-    fun initialisePlayer(context: Context, url: String, videoId: String, position: Long) {
+    fun initialisePlayer(context: Context, url: String, videoId: String) {
         playerr?.release()
         playerr = ExoPlayer.Builder(context)
             .setTrackSelector(_state.value.trackSelector)
@@ -150,7 +168,6 @@ class VideoViewModel @Inject constructor(
         url: String,
         licenseUrl: String,
         videoId: String,
-        position: Long,
     ) {
         playerr?.release()
         playerr = ExoPlayer.Builder(context)
@@ -213,6 +230,8 @@ class VideoViewModel @Inject constructor(
     }
 
 
+
+
 //    fun playerViewBuilder(ctx: Context): StyledPlayerView {
 //        _state.value.playerView = StyledPlayerView(ctx).apply {
 //            player = playerr
@@ -252,6 +271,7 @@ class VideoViewModel @Inject constructor(
         _state.value.playerView = StyledPlayerView(ctx).apply {
             this.useController = false
             this.player = playerr
+            this.keepScreenOn = true
             playerr!!.seekTo(position)
         }
         return _state.value.playerView

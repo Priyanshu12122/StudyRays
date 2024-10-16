@@ -37,6 +37,8 @@ import com.xerox.studyrays.ui.theme.TextWhite
 fun SelectableIconRow(
     modifier: Modifier = Modifier,
     icons: ImmutableIcons,
+    isOld: Boolean,
+    onTelegramClick: () -> Unit,
     onStarClick: () -> Unit,
 ) {
     var selectedIndex by remember { mutableIntStateOf(0) }
@@ -56,12 +58,12 @@ fun SelectableIconRow(
                 Box(
                     modifier = Modifier
                         .size(54.dp)
-                        .clip(CircleShape)
                         .shadow(
                             elevation = 20.dp,
                             shape = CircleShape,
                             ambientColor = if (!isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
                         )
+                        .clip(CircleShape)
                         .background(
                             if (selectedIndex == index) MaterialTheme.colorScheme.primary
                             else if (!isSystemInDarkTheme()) Color.White
@@ -84,9 +86,14 @@ fun SelectableIconRow(
                     IconButton(
                         onClick = {
                             selectedIndex = index
-                            if (selectedIndex == 4){
-                                onStarClick()
+
+                            when {
+                                !isOld && selectedIndex == 3 -> onStarClick()
+                                !isOld && selectedIndex == 4 -> onTelegramClick()
+                                isOld && selectedIndex == 1 -> onStarClick()
+                                isOld && selectedIndex == 2 -> onTelegramClick()
                             }
+
                         }, modifier = modifier
                             .align(
                                 Alignment.Center
@@ -99,15 +106,15 @@ fun SelectableIconRow(
                             Icon(
                                 imageVector = iconItem.icon,
                                 contentDescription = null,
-                                modifier = modifier.size(35.dp),
-                                tint = if(selectedIndex == index && !isSystemInDarkTheme()) TextBlack else if (isSystemInDarkTheme()) TextWhite else TextBlack
+                                modifier = modifier.size(25.dp),
+                                tint = if(selectedIndex == index ) TextBlack else if (isSystemInDarkTheme()) TextWhite else TextBlack
                             )
                         } else {
                             Icon(
                                 painter = painterResource(id = iconItem.painter),
                                 contentDescription = null,
-                                modifier = modifier.size(35.dp),
-                                tint = if(selectedIndex == index && !isSystemInDarkTheme()) TextBlack else if (isSystemInDarkTheme()) TextWhite else TextBlack
+                                modifier = modifier.size(25.dp),
+                                tint = if(selectedIndex == index ) TextBlack else if (isSystemInDarkTheme()) TextWhite else TextBlack
                             )
                         }
 

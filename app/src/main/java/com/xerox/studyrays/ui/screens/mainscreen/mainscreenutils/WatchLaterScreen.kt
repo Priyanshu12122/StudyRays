@@ -34,7 +34,6 @@ import com.xerox.studyrays.db.watchLaterDb.WatchLaterEntity
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForVideo
-import com.xerox.studyrays.ui.screens.videoPlayerScreen.VideoViewModel
 import com.xerox.studyrays.utils.CategoryTabRow2
 import com.xerox.studyrays.utils.Constants
 import com.xerox.studyrays.utils.DataNotFoundScreen
@@ -47,7 +46,7 @@ import kotlinx.coroutines.launch
 fun WatchLaterScreen(
     modifier: Modifier = Modifier,
     vm: MainViewModel = hiltViewModel(),
-    onVideoClicked: (String, String, String, String, String, String, String, String, String) -> Unit,
+    onVideoClicked: (String, String, String, String, String, String, String, String, String, Boolean) -> Unit,
     onBackClick: () -> Unit,
 ) {
 
@@ -55,7 +54,7 @@ fun WatchLaterScreen(
         vm.getAllWatchLater()
     }
 
-    val categories = listOf("Physics wallah", "Khazana", "Apni Kaksha")
+    val categories = listOf("Physics wallah", "Khazana")
     val pagerState = rememberPagerState(pageCount = { categories.size })
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -126,7 +125,7 @@ fun WatchLaterScreen(
                                     PwScreen(
                                         videos = vm.pwWatchLater.sortedByDescending { it.time },
                                         vm = vm,
-                                        onVideoClicked = { url, title, id, embedCode, videoId, imageUrl, createdAt, duration ->
+                                        onVideoClicked = { url, title, id, embedCode, videoId, imageUrl, createdAt, duration, isOld ->
                                             onVideoClicked(
                                                 url,
                                                 title,
@@ -136,7 +135,9 @@ fun WatchLaterScreen(
                                                 imageUrl,
                                                 createdAt,
                                                 duration,
-                                                Constants.PW
+                                                Constants.PW,
+                                                isOld
+
                                             )
 
 
@@ -155,7 +156,7 @@ fun WatchLaterScreen(
                                     PwScreen(
                                         videos = vm.khazanaWatchLater.sortedByDescending { it.time },
                                         vm = vm,
-                                        onVideoClicked = { url, title, id, embedCode, videoId, imageUrl, createdAt, duration ->
+                                        onVideoClicked = { url, title, id, embedCode, videoId, imageUrl, createdAt, duration, isOld ->
                                             onVideoClicked(
                                                 url,
                                                 title,
@@ -165,7 +166,8 @@ fun WatchLaterScreen(
                                                 imageUrl,
                                                 createdAt,
                                                 duration,
-                                                Constants.KHAZANA
+                                                Constants.KHAZANA,
+                                                isOld
                                             )
 
 
@@ -175,31 +177,7 @@ fun WatchLaterScreen(
 
                             }
 
-                            2 -> {
-                                if (vm.akWatchLater.isEmpty()) {
-                                    NoFilesFoundScreen()
-                                } else {
-                                    PwScreen(
-                                        videos = vm.akWatchLater.sortedByDescending { it.time },
-                                        vm = vm,
-                                        onVideoClicked = { url, title, id, embedCode, videoId, imageUrl, createdAt, duration ->
-                                            onVideoClicked(
-                                                url,
-                                                title,
-                                                id,
-                                                embedCode,
-                                                videoId,
-                                                imageUrl,
-                                                createdAt,
-                                                duration,
-                                                Constants.AK
-                                            )
 
-                                        }
-                                    )
-                                }
-
-                            }
 
                         }
 
@@ -214,60 +192,21 @@ fun WatchLaterScreen(
     }
 }
 
-//    result.data.sortedByDescending { it.time }
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun PwScreen(
     modifier: Modifier = Modifier,
     videos: List<WatchLaterEntity>,
     vm: MainViewModel,
-    videoViewModel: VideoViewModel = hiltViewModel(),
-    onVideoClicked: (String, String, String, String, String, String, String, String) -> Unit,
+    onVideoClicked: (String, String, String, String, String, String, String, String, Boolean) -> Unit,
 ) {
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-//    val savedStatusMap =
-//        remember { mutableStateMapOf<String, Boolean>() }
 
     val savedStatusMapWatchLater =
         remember { mutableStateMapOf<String, Boolean>() }
-
-//    var isOpen by rememberSaveable {
-//        mutableStateOf(false)
-//    }
-//
-//    var selectedVideoId by rememberSaveable {
-//        mutableStateOf("")
-//    }
-//
-//    var selectedVideoUrl by rememberSaveable {
-//        mutableStateOf("")
-//    }
-//
-//    var isCompleted by rememberSaveable {
-//        mutableStateOf(false)
-//    }
-//
-//    if (isOpen) {
-//        BottomSheet(
-//            sheetState = rememberModalBottomSheetState(),
-//            onMarkAsCompletedClicked = {
-//                vm.onMarkAsCompleteClicked(Video(selectedVideoId))
-//                savedStatusMap[selectedVideoId] = !isCompleted
-//                isOpen = false
-//
-//            },
-//            onDownloadClicked = {
-//
-//            },
-//            isCompleted = isCompleted
-//        ) {
-//            isOpen = false
-//        }
-//    }
-
 
     LazyColumn {
         items(videos) { video ->
@@ -293,9 +232,9 @@ fun PwScreen(
                             externalId = video.externalId,
                             embedCode = video.embedCode,
                             time = System.currentTimeMillis(),
-                            isAk = video.isAk,
                             isKhazana = video.isKhazana,
-                            isPw = video.isPw
+                            isPw = video.isPw,
+                            isOld = video.isOld
                         ),
                         context = context
                     )
@@ -318,7 +257,8 @@ fun PwScreen(
                         video.videoId,
                         video.imageUrl,
                         video.dateCreated,
-                        video.duration
+                        video.duration,
+                        video.isOld
                     )
                 }
             )

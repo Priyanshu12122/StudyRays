@@ -46,10 +46,17 @@ class StudyFocusRepository @Inject constructor(
         return sessionDao.getTotalSessionsDuration()
     }
 
+    suspend fun getTotalSessionsDurationNormal(): Long {
+        return sessionDao.getTotalSessionsDurationNormal()
+    }
+
     fun getTotalSessionsDurationBySubject(subjectId: Int): Flow<Long> {
         return sessionDao.getTotalSessionsDurationBySubject(subjectId)
     }
 
+    suspend fun getTotalSessionsDurationBySubjectNormal(subjectId: Int): Long {
+        return sessionDao.getTotalSessionsDurationBySubjectNormal(subjectId)
+    }
 
     suspend fun upsertSubject(subject: SubjectsEntity) {
         subjectDao.upsertSubject(subject)
@@ -61,6 +68,10 @@ class StudyFocusRepository @Inject constructor(
 
     fun getTotalGoalHours(): Flow<Float> {
         return subjectDao.getTotalGoalHours()
+    }
+
+    suspend fun getTotalGoalHoursNormal(): Float {
+        return subjectDao.getTotalGoalHoursNormal()
     }
 
     suspend fun deleteSubject(subjectId: Int) {
@@ -75,6 +86,10 @@ class StudyFocusRepository @Inject constructor(
 
     fun getAllSubjects(): Flow<List<SubjectsEntity>> {
         return subjectDao.getAllSubjects()
+    }
+
+    suspend fun getAllSubjectsNormal(): List<SubjectsEntity> {
+        return subjectDao.getAllSubjectsNormal()
     }
 
 

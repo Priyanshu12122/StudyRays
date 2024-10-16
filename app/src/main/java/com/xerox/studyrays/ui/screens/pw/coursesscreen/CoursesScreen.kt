@@ -1,6 +1,5 @@
 package com.xerox.studyrays.ui.screens.pw.coursesscreen
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,8 +30,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.stevdzasan.messagebar.rememberMessageBarState
-import com.xerox.studyrays.cacheDb.pwCache.courseDb.PwCourseEntity
 import com.xerox.studyrays.db.favouriteCoursesDb.FavouriteCourse
+import com.xerox.studyrays.model.pwModel.CourseItemX
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.utils.Category
@@ -43,18 +42,21 @@ import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CoursesScreen(
     classValue: String,
-    isOld: Boolean,
     vm: MainViewModel = hiltViewModel(),
     onBackClicked: () -> Unit,
-    onClickOld: (String, String) -> Unit,
+//    onClickOld: (String, String) -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
     onCLick: (String, String, String, String) -> Unit,
-) {
+
+    ) {
 
     val state by vm.courses.collectAsState()
+    val result = state
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val scope = rememberCoroutineScope()
@@ -62,7 +64,14 @@ fun CoursesScreen(
     val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(key1 = Unit) {
-        vm.getClasses(classValue, isOld)
+        if (result !is Response.Success) {
+            vm.getClasses(classValue)
+        }
+        vm.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
+            }
+        )
     }
 
     Scaffold(
@@ -72,7 +81,11 @@ fun CoursesScreen(
         snackbarHost = { SnackbarHost(snackBarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(text = "Batch List For Class $classValue") },
+                title = {
+                    Text(
+                        text = "Batch List For Class $classValue"
+                    )
+                },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = {
@@ -86,7 +99,7 @@ fun CoursesScreen(
                 }
             )
         }) { it ->
-        when (val result = state) {
+        when (result) {
             is Response.Error -> {
 
                 val messageState = rememberMessageBarState()
@@ -97,7 +110,7 @@ fun CoursesScreen(
                     paddingValues = it,
                     shouldShowBackButton = true,
                     onRetryClicked = {
-                        vm.getClasses(classValue, isOld)
+                        vm.getClasses(classValue)
                     }) {
                     onBackClicked()
                 }
@@ -110,7 +123,6 @@ fun CoursesScreen(
             }
 
             is Response.Success -> {
-
 
 
                 val allCourses: MutableList<Category> = mutableListOf()
@@ -223,49 +235,52 @@ fun CoursesScreen(
 
                                 PullToRefreshLazyColumn(
                                     items = list,
-                                    content = { batchItem: PwCourseEntity ->
-                                        val isSaved = savedStatusMap[batchItem.externalId] ?: false
+                                    content = { batchItem: CourseItemX ->
+                                        val isSaved = savedStatusMap[batchItem.batch_id] ?: false
                                         EachCourseCardInClass(
                                             item = batchItem,
                                             isSaved = isSaved,
                                             onFavouriteIconClicked = { value ->
-                                                vm.onFavoriteClick(FavouriteCourse(externalId = value))
-                                                savedStatusMap[batchItem.externalId] = !isSaved
+                                                vm.onFavoriteClick(
+                                                    FavouriteCourse(
+                                                        externalId = value,
+                                                        name = batchItem.batch_name,
+                                                        byName = batchItem.byName,
+                                                        language = batchItem.language,
+                                                        imageUrl = batchItem.previewImage,
+                                                        slug = batchItem.slug,
+                                                        classValue = batchItem.`class`,
+                                                        isOld = false
+                                                    )
+                                                )
+                                                savedStatusMap[batchItem.batch_id] = !isSaved
                                                 vm.showToast(
                                                     context,
-                                                    if (!isSaved) "${batchItem.name} added to favourites list" else "${batchItem.name} removed from favourites list"
+                                                    if (!isSaved) "${batchItem.batch_name} added to favourites list"
+                                                    else "${batchItem.batch_name} removed from favourites list"
                                                 )
                                             },
                                             checkIfSaved = {
                                                 scope.launch {
                                                     val saved =
-                                                        vm.checkIfItemIsPresentInDb(
-                                                            FavouriteCourse(
-                                                                it
-                                                            )
-                                                        )
-                                                    savedStatusMap[batchItem.externalId] = saved
+                                                        vm.checkIfItemIsPresentInDb(it)
+                                                    savedStatusMap[batchItem.batch_id] = saved
                                                 }
                                             }
                                         ) {
 
-                                            if(isOld){
-                                                onClickOld(batchItem.externalId, batchItem.name)
-                                            } else {
-
-                                                onCLick(
-                                                    batchItem.externalId,
-                                                    batchItem.slug,
-                                                    batchItem.classValue,
-                                                    batchItem.name
-                                                )
-                                            }
+                                            onCLick(
+                                                batchItem.batch_id,
+                                                batchItem.slug,
+                                                batchItem.`class`,
+                                                batchItem.batch_name
+                                            )
 
                                         }
                                     },
                                     isRefreshing = vm.isRefreshing,
                                     onRefresh = {
-                                        vm.refreshAllCourses(classValue = classValue, isOld = isOld) {
+                                        vm.refreshAllCourses(classValue = classValue) {
                                             vm.showSnackBar(snackBarHostState)
                                         }
                                     })
@@ -273,6 +288,11 @@ fun CoursesScreen(
                         }
                     }
                 }
+
+
+
+
+
             }
         }
     }

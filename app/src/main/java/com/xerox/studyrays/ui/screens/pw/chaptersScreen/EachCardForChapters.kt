@@ -3,8 +3,8 @@ package com.xerox.studyrays.ui.screens.pw.chaptersScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -15,11 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +32,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.xerox.studyrays.ui.theme.MainPurple
+import com.xerox.studyrays.utils.SpacerWidth
+import com.xerox.studyrays.utils.shimmerEffect
 
 
 @Composable
@@ -51,23 +54,20 @@ fun EachCardForChapters(
             .shadow(
                 elevation = 20.dp,
                 shape = RoundedCornerShape(10.dp),
-                ambientColor = if (!isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+                ambientColor = Color.DarkGray
             )
             .clip(RoundedCornerShape(10.dp))
-            .background(if (!isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background)
             .clickable {
                 onClick()
             }
             .then(
-                if (isSystemInDarkTheme()) {
-                    Modifier.border(
-                        1.dp,
-                        Color.White.copy(0.6f),
-                        RoundedCornerShape(10.dp)
-                    )
-                } else {
-                    Modifier
-                }
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
+
             )
     ) {
         Row(
@@ -135,7 +135,7 @@ fun EachCardForChapters(
             }
 
             Icon(
-                imageVector = Icons.Filled.ArrowForward,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "",
                 modifier = Modifier.weight(
                     1f
@@ -145,4 +145,144 @@ fun EachCardForChapters(
         }
 
     }
+}
+
+@Composable
+fun EachCardForChapterLoading(modifier: Modifier = Modifier) {
+
+    Column(
+        modifier = modifier
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+            .fillMaxWidth()
+            .height(100.dp)
+            .shadow(
+                elevation = 20.dp,
+                shape = RoundedCornerShape(10.dp),
+                ambientColor = Color.DarkGray
+            )
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .then(
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
+
+            )
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+
+            VerticalDivider(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxHeight(),
+                color = MainPurple,
+                thickness = 3.5.dp
+            )
+
+            Column(
+                modifier = Modifier.weight(7f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .weight(1f)
+                        .shimmerEffect()
+                )
+
+                Row(
+                    modifier = Modifier
+                        .padding(5.dp)
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    SpacerWidth(5.dp)
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .weight(1f)
+                            .shimmerEffect()
+                    )
+
+//                    SpacerWidth(5.dp)
+
+
+                    VerticalDivider(
+                        thickness = 1.5.dp,
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                    )
+
+//                    SpacerWidth(5.dp)
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .weight(1f)
+                            .shimmerEffect()
+                    )
+
+//                    SpacerWidth(5.dp)
+
+
+                    VerticalDivider(
+                        thickness = 1.5.dp,
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                    )
+
+//                    SpacerWidth(5.dp)
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .weight(1f)
+                            .shimmerEffect()
+                    )
+
+                    SpacerWidth(5.dp)
+
+                }
+
+
+            }
+
+//            Icon(
+//                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+//                contentDescription = "",
+//                modifier = Modifier.weight(
+//                    1f
+//                )
+//            )
+
+        }
+
+    }
+
 }

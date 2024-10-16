@@ -35,6 +35,11 @@ fun Long.toHours(): Float {
     return "%.2f".format(hours).toFloat()
 }
 
+fun Long.toHours2(): Float {
+    val hours = this.toFloat() / 3600f
+    return "%.3f".format(hours).toFloat()
+}
+
 sealed class SnackbarEvent {
     data class ShowSnackbar(
         val message: String,

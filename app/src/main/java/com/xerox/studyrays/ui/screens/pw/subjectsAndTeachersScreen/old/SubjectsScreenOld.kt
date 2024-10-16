@@ -1,6 +1,8 @@
 package com.xerox.studyrays.ui.screens.pw.subjectsAndTeachersScreen.old
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import android.util.Log
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,7 +11,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,7 +47,7 @@ import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyVerticalGrid
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun SubjectsScreenOld(
     vm: MainViewModel = hiltViewModel(),
@@ -77,14 +78,22 @@ fun SubjectsScreenOld(
         mutableStateOf("")
     }
 
+    val navBarState by vm.navBar.collectAsState()
+    val navResult = navBarState
+
     LaunchedEffect(key1 = Unit) {
-        vm.getAllSubjectsOld(courseId = courseId)
-        vm.getNavItems()
+        if (result !is ResponseTwo.Success) {
+            vm.getAllSubjectsOld(courseId = courseId)
+        }
+
+        if (navResult !is ResponseTwo.Success) {
+            vm.getNavItems()
+        }
     }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    val navBarState by vm.navBar.collectAsState()
-    when (val navResult = navBarState) {
+
+    when (navResult) {
         is ResponseTwo.Error -> {}
         is ResponseTwo.Loading -> {}
         is ResponseTwo.Nothing -> {}
@@ -117,7 +126,7 @@ fun SubjectsScreenOld(
                         }
                     }) {
                         Icon(
-                            painter = painterResource(id = R.drawable.telegramoutlined),
+                            painter = painterResource(id = R.drawable.telegram),
                             contentDescription = "",
                             modifier = Modifier.size(25.dp)
                         )
@@ -134,8 +143,9 @@ fun SubjectsScreenOld(
                         }
                     }) {
                         Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = ""
+                            painter = painterResource(id = R.drawable.megaphone),
+                            contentDescription = "",
+                            modifier = Modifier.size(25.dp)
                         )
                     }
 
@@ -156,6 +166,7 @@ fun SubjectsScreenOld(
     ) { paddingValues ->
         when (result) {
             is ResponseTwo.Error -> {
+                Log.d("TAG", "SubjectsScreenOld: ${result.msg}")
                 val messageState = rememberMessageBarState()
                 DataNotFoundScreen(
                     paddingValues = paddingValues,
@@ -180,7 +191,9 @@ fun SubjectsScreenOld(
 
 
                 LaunchedEffect(key1 = Unit) {
-                    batchId = result.data?.batchDetails?.externalId ?: ""
+                    batchId = result.data?.batch_details?.external_id ?: ""
+
+                    Log.d("TAG", "SubjectsScreenOld: ${result.data}")
                 }
 
 
@@ -210,8 +223,8 @@ fun SubjectsScreenOld(
                                     PullToRefreshLazyVerticalGrid(
                                         items = vm.subjectsListOld,
                                         content = {
-                                            val baseUrl: String? = it?.image?.baseUrl
-                                            val key: String? = it?.image?.key
+                                            val baseUrl: String? = it?.imageId?.baseUrl
+                                            val key: String? = it?.imageId?.key
                                             val imageUrl: String =
                                                 if (baseUrl.equals(null) || key.equals(null)) {
                                                     "https://i.ibb.co/r6812HL/Physics.png"
@@ -221,11 +234,11 @@ fun SubjectsScreenOld(
                                             EachCardForSubject(
                                                 imageUrl = imageUrl
                                                     ?: "https://i.ibb.co/r6812HL/Physics.png",
-                                                text = it?.subject?.subject ?: ""
+                                                text = it?.subject ?: ""
                                             ) {
                                                 onClick(
-                                                    it?.subject?.id ?: "",
-                                                    it?.subject?.subject ?: ""
+                                                    it?._id ?: "",
+                                                    it?.subject ?: ""
                                                 )
 
                                             }

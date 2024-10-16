@@ -1,6 +1,5 @@
 package com.xerox.studyrays.ui.screens
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -19,46 +18,50 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.xerox.studyrays.cacheDb.keyGeneratorCache.KeyGenerateEntity
 import com.xerox.studyrays.cacheDb.mainScreenCache.navDb.NavEntity
-import com.xerox.studyrays.cacheDb.mainScreenCache.priceDb.PriceEntity
-import com.xerox.studyrays.cacheDb.mainScreenCache.promoDb.PromoEntity
 import com.xerox.studyrays.cacheDb.mainScreenCache.searchSectionDb.SearchEntity
-import com.xerox.studyrays.cacheDb.pwCache.courseDb.PwCourseEntity
-import com.xerox.studyrays.cacheDb.pwCache.dppDb.PwDppEntity
-import com.xerox.studyrays.cacheDb.pwCache.lessonDb.PwLessonEntity
-import com.xerox.studyrays.cacheDb.pwCache.notesDb.PwNotesEntity
-import com.xerox.studyrays.cacheDb.pwCache.subjectsAndTeachersCache.BatchDetailsEntity
-import com.xerox.studyrays.cacheDb.pwCache.subjectsAndTeachersCache.relations.BatchDetailsWithSubjects
-import com.xerox.studyrays.cacheDb.pwCache.subjectsAndTeachersCache.relations.SubjectWithTeachersAndImageId
-import com.xerox.studyrays.cacheDb.pwCache.subjectsAndTeachersCache.relations.TeacherIdWithImage
 import com.xerox.studyrays.data.ApiRepository
 import com.xerox.studyrays.data.internetAvailability.NetworkManager
 import com.xerox.studyrays.db.favouriteCoursesDb.FavouriteCourse
 import com.xerox.studyrays.db.keyDb.KeyEntity
 import com.xerox.studyrays.db.watchLaterDb.WatchLaterEntity
 import com.xerox.studyrays.model.downloads.DownloadItem
+import com.xerox.studyrays.model.pwModel.CourseItem
+import com.xerox.studyrays.model.pwModel.CourseItemX
 import com.xerox.studyrays.model.pwModel.DppItem
 import com.xerox.studyrays.model.pwModel.DppSolutionItem
 import com.xerox.studyrays.model.pwModel.Lesson.LessonItem
 import com.xerox.studyrays.model.pwModel.NoteItem
+import com.xerox.studyrays.model.pwModel.PromoItem
 import com.xerox.studyrays.model.pwModel.SearchItem
 import com.xerox.studyrays.model.pwModel.SearchOldItem
 import com.xerox.studyrays.model.pwModel.VideoItem
 import com.xerox.studyrays.model.pwModel.alertItem.AlertItem
 import com.xerox.studyrays.model.pwModel.announcementsItem.AnnouncementItem
+import com.xerox.studyrays.model.pwModel.batchDetails.BatchDetails
+import com.xerox.studyrays.model.pwModel.batchDetails.TeacherId
 import com.xerox.studyrays.model.pwModel.batchDetailss.BatchDetailsssItem
 import com.xerox.studyrays.model.pwModel.batchDetailss.Subject
 import com.xerox.studyrays.model.pwModel.batchDetailss.Teacher
 import com.xerox.studyrays.model.pwModel.comments.CommentItem
+import com.xerox.studyrays.model.pwModel.fetchModel.FetchClassItem
+import com.xerox.studyrays.model.pwModel.fetchModel.FetchExamItem
+import com.xerox.studyrays.model.pwModel.fetchModel.FetchYearItem
+import com.xerox.studyrays.model.pwModel.old.DppOldItem
 import com.xerox.studyrays.model.pwModel.old.DppSolutionOldItem
+import com.xerox.studyrays.model.pwModel.old.NoteOldItem
 import com.xerox.studyrays.model.pwModel.old.VideoOldItem
+import com.xerox.studyrays.model.pwModel.priceItem.PriceItem
 import com.xerox.studyrays.model.pwModel.statusItem.StatusItem
 import com.xerox.studyrays.model.videoPlayerModel.TimelineItem
 import com.xerox.studyrays.navigation.NavRoutes
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.network.ResponseTwo
+import com.xerox.studyrays.utils.Constants.PAGE_SIZE
 import com.xerox.studyrays.utils.decrypt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -75,16 +78,6 @@ class MainViewModel @Inject constructor(
     private val repository: ApiRepository,
     @ApplicationContext context: Context,
 ) : ViewModel() {
-
-//    init {
-//        observeInternetAccessibility()
-//        viewModelScope.launch {
-//            repository.getAllExamples().forEach {
-//                Log.d("TAG", "$it")
-//            }
-//
-//        }
-//    }
 
     private val key = Keys.kkk()
     private val iv = Keys.ivv()
@@ -126,7 +119,7 @@ class MainViewModel @Inject constructor(
     }
 
 
-    private val _totalFee: MutableStateFlow<Response<PriceEntity>> =
+    private val _totalFee: MutableStateFlow<Response<PriceItem>> =
         MutableStateFlow(Response.Loading())
     val totalFee = _totalFee.asStateFlow()
 
@@ -193,12 +186,13 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _comments.value = Response.Loading()
-                val response = repository.getComments(externalId = externalId, topicSlug = topicSlug)
+                val response =
+                    repository.getComments(externalId = externalId, topicSlug = topicSlug)
                 val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<CommentItem>? =
                     gson.fromJson(decryptedData, Array<CommentItem>::class.java).toList()
-                if(data == null){
+                if (data == null) {
                     throw NullPointerException(nullErrorMsg)
                 } else {
                     _comments.value = Response.Success(data)
@@ -216,17 +210,17 @@ class MainViewModel @Inject constructor(
 
 //    Favourite batches
 
-    private val _allFavouriteCourses: MutableStateFlow<List<FavouriteCourse?>?> =
-        MutableStateFlow(emptyList())
-    val allFavCourses = _allFavouriteCourses.asStateFlow()
-
-    fun getAllFavCourses() {
-        viewModelScope.launch {
-            repository.getAllCourses().collect {
-                _allFavouriteCourses.value = it
-            }
-        }
-    }
+//    private val _allFavouriteCourses: MutableStateFlow<List<FavouriteCourse?>?> =
+//        MutableStateFlow(emptyList())
+//    val allFavCourses = _allFavouriteCourses.asStateFlow()
+//
+//    fun getAllFavCourses() {
+//        viewModelScope.launch {
+//            repository.getAllFavouriteCourses().collect {
+//                _allFavouriteCourses.value = it
+//            }
+//        }
+//    }
 
     fun showToast(context: Context, msg: String) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -247,30 +241,160 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    suspend fun checkIfItemIsPresentInDb(item: FavouriteCourse): Boolean {
-        return repository.checkIfPresent(item.externalId)
+    suspend fun checkIfItemIsPresentInDb(externalId: String): Boolean {
+        return repository.checkIfPresent(externalId)
     }
 
 
-    private val _allCourses: MutableStateFlow<Response<List<PwCourseEntity>>> =
+    private val _fetchClass: MutableStateFlow<Response<List<FetchClassItem>?>> =
+        MutableStateFlow(Response.Loading())
+    val fetchClass = _fetchClass.asStateFlow()
+
+    fun fetchClasses() {
+        viewModelScope.launch {
+            try {
+                _fetchClass.value = Response.Loading()
+                val response = repository.getFetchClasses()
+                Log.d("TAG", "fetchClasses: classes = $response")
+                _fetchClass.value = Response.Success(response)
+            } catch (e: SocketTimeoutException) {
+                _fetchClass.value =
+                    Response.Error(socketErrorMsg)
+            } catch (e: UnknownHostException) {
+                _fetchClass.value = Response.Error(noInternetMsg)
+            } catch (e: Exception) {
+                _fetchClass.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+            }
+
+        }
+    }
+
+    private val _fetchYears: MutableStateFlow<Response<List<FetchYearItem>?>> =
+        MutableStateFlow(Response.Loading())
+    val fetchYears: StateFlow<Response<List<FetchYearItem>?>> = _fetchYears.asStateFlow()
+
+    fun fetchYears(classValue: String) {
+        viewModelScope.launch {
+            try {
+                _fetchYears.value = Response.Loading()
+                val response = repository.getFetchYears(classValue)
+                _fetchYears.value = Response.Success(response)
+            } catch (e: SocketTimeoutException) {
+                _fetchYears.value =
+                    Response.Error(socketErrorMsg)
+            } catch (e: UnknownHostException) {
+                _fetchYears.value = Response.Error(noInternetMsg)
+            } catch (e: Exception) {
+                _fetchYears.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+            }
+
+        }
+    }
+
+    private val _fetchExams: MutableStateFlow<Response<List<FetchExamItem?>?>> =
+        MutableStateFlow(Response.Loading())
+    val fetchExams = _fetchExams.asStateFlow()
+
+    fun fetchExams(classValue: String, year: String) {
+        viewModelScope.launch {
+            try {
+                _fetchExams.value = Response.Loading()
+                val response = repository.getFetchExams(classValue, year)
+                _fetchExams.value = Response.Success(response)
+            } catch (e: SocketTimeoutException) {
+                _fetchExams.value =
+                    Response.Error(socketErrorMsg)
+            } catch (e: UnknownHostException) {
+                _fetchExams.value = Response.Error(noInternetMsg)
+            } catch (e: Exception) {
+                _fetchExams.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+            }
+
+        }
+    }
+
+    private val _fetchSearch: MutableStateFlow<Response<List<CourseItemX>?>> =
+        MutableStateFlow(Response.Loading())
+    val fetchSearch: StateFlow<Response<List<CourseItemX>?>> = _fetchSearch.asStateFlow()
+
+    fun fetchSearches(searchQuery: String) {
+        viewModelScope.launch {
+            try {
+                _fetchSearch.value = Response.Loading()
+                val response = repository.getFetchSearches(searchQuery)
+                _fetchSearch.value = Response.Success(response)
+            } catch (e: SocketTimeoutException) {
+                _fetchSearch.value =
+                    Response.Error(socketErrorMsg)
+            } catch (e: UnknownHostException) {
+                _fetchSearch.value = Response.Error(noInternetMsg)
+            } catch (e: Exception) {
+                _fetchSearch.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+            }
+        }
+    }
+
+    private val _fetchAllBatches: MutableStateFlow<Response<List<CourseItemX>?>> =
+        MutableStateFlow(Response.Loading())
+    val fetchAllBatches: StateFlow<Response<List<CourseItemX>?>> = _fetchAllBatches.asStateFlow()
+
+    fun fetchAllBatches() {
+        viewModelScope.launch {
+            try {
+                _fetchAllBatches.value = Response.Loading()
+                val response = repository.getFetchAllBatches()
+                _fetchAllBatches.value = Response.Success(response)
+            } catch (e: SocketTimeoutException) {
+                _fetchAllBatches.value =
+                    Response.Error(socketErrorMsg)
+            } catch (e: UnknownHostException) {
+                _fetchAllBatches.value = Response.Error(noInternetMsg)
+            } catch (e: Exception) {
+                _fetchAllBatches.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+            }
+        }
+    }
+
+    private val _fetchBatches: MutableStateFlow<Response<List<CourseItemX>?>> =
+        MutableStateFlow(Response.Loading())
+    val fetchBatches: StateFlow<Response<List<CourseItemX>?>> = _fetchBatches.asStateFlow()
+
+    fun fetchBatches(classValue: String, year: String, exam: String) {
+        viewModelScope.launch {
+            try {
+                _fetchBatches.value = Response.Loading()
+                val response =
+                    repository.getFetchBatches(classValue = classValue, year = year, exam = exam)
+                _fetchBatches.value = Response.Success(response)
+            } catch (e: SocketTimeoutException) {
+                _fetchBatches.value =
+                    Response.Error(socketErrorMsg)
+            } catch (e: UnknownHostException) {
+                _fetchBatches.value = Response.Error(noInternetMsg)
+            } catch (e: Exception) {
+                _fetchBatches.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+            }
+        }
+    }
+
+
+    private val _allCourses: MutableStateFlow<Response<List<CourseItemX>>> =
         MutableStateFlow(Response.Loading())
     val courses = _allCourses.asStateFlow()
 
 
-    val neetCourses = mutableListOf<PwCourseEntity>()
-    val jeeCourses = mutableListOf<PwCourseEntity>()
-    val boardCourses = mutableListOf<PwCourseEntity>()
-    val vidyapeethCourses = mutableListOf<PwCourseEntity>()
-    val freeCourses = mutableListOf<PwCourseEntity>()
-    val youtubeCourses = mutableListOf<PwCourseEntity>()
-    val otherCourses = mutableListOf<PwCourseEntity>()
+    val neetCourses = mutableListOf<CourseItemX>()
+    val jeeCourses = mutableListOf<CourseItemX>()
+    val boardCourses = mutableListOf<CourseItemX>()
+    val vidyapeethCourses = mutableListOf<CourseItemX>()
+    val freeCourses = mutableListOf<CourseItemX>()
+    val youtubeCourses = mutableListOf<CourseItemX>()
+    val otherCourses = mutableListOf<CourseItemX>()
 
 
     fun getClasses(
         classValue: String,
-        isOld: Boolean,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -278,8 +402,7 @@ class MainViewModel @Inject constructor(
                 if (!isRefresh) {
                     _allCourses.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAllCoursesFromApi(classValue, isOld)
-                else repository.getAllCourses(classValue, isOld)
+                val response = repository.getAllCourses(classValue)
 
                 neetCourses.clear()
                 jeeCourses.clear()
@@ -289,7 +412,7 @@ class MainViewModel @Inject constructor(
                 youtubeCourses.clear()
                 otherCourses.clear()
                 response?.forEach {
-                    val name = it.name.lowercase()
+                    val name = it.batch_name.lowercase()
                     val byName = it.byName.lowercase()
 
                     when {
@@ -323,36 +446,202 @@ class MainViewModel @Inject constructor(
 
     fun refreshAllCourses(
         classValue: String,
-        isOld: Boolean,
         onComplete: () -> Unit,
     ) {
         isRefreshing = true
-        getClasses(classValue = classValue, isRefresh = true, fromApi = true, isOld = isOld) {
+        getClasses(classValue = classValue, isRefresh = true) {
             isRefreshing = false
             onComplete()
         }
     }
 
 
-    private val _allSubjectsOld: MutableStateFlow<ResponseTwo<BatchDetailsWithSubjects?>> =
+//        private var currentPage = 1
+//        private var isLastPage = false
+//         var isLoadingg = false
+//        private val itemsPerPage = 2
+//
+//        fun getClassesPaginated(
+//            classValue: String,
+//            isRefresh: Boolean = false,
+//            onComplete: (() -> Unit)? = null,
+//        ) {
+//            if (isLoadingg || isLastPage) return
+//
+//            viewModelScope.launch {
+//                try {
+//                    isLoadingg = true
+//                    if (!isRefresh && currentPage == 1) {
+//                        _allCourses.value = Response.Loading()
+//                    }
+//                    val response = repository.getAllCoursesPaginated(
+//                        classValue = classValue,
+//                        page = currentPage,
+//                        limit = itemsPerPage
+//                    )
+//
+//                    if (response.isNullOrEmpty()) {
+//                        isLastPage = true
+//                    } else {
+//                        if (isRefresh) {
+//                            neetCourses.clear()
+//                            jeeCourses.clear()
+//                            boardCourses.clear()
+//                            vidyapeethCourses.clear()
+//                            freeCourses.clear()
+//                            youtubeCourses.clear()
+//                            otherCourses.clear()
+//                        }
+//
+//                        response.forEach {
+//                            val name = it.batch_name.lowercase()
+//                            val byName = it.byName.lowercase()
+//
+//                            when {
+//                                name.contains("neet") -> neetCourses.add(it)
+//                                name.contains("jee") -> jeeCourses.add(it)
+//                                name.contains("board") -> boardCourses.add(it)
+//                                name.contains("vidyapeeth") -> vidyapeethCourses.add(it)
+//                                name.contains("free") -> freeCourses.add(it)
+//                                name.contains("yt") || byName.contains("youtube") -> youtubeCourses.add(it)
+//                                else -> otherCourses.add(it)
+//                            }
+//                        }
+//
+//                        val allCourses = neetCourses + jeeCourses + boardCourses + vidyapeethCourses + freeCourses + youtubeCourses + otherCourses
+//                        _allCourses.value = Response.Success(allCourses)
+//                        currentPage++
+//                    }
+//                    isLoadingg = false
+//                } catch (e: SocketTimeoutException) {
+//                    _allCourses.value = Response.Error(socketErrorMsg)
+//                    isLoadingg = false
+//                } catch (e: UnknownHostException) {
+//                    _allCourses.value = Response.Error(noInternetMsg)
+//                    isLoadingg = false
+//                } catch (e: Exception) {
+//                    _allCourses.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+//                    isLoadingg = false
+//                } finally {
+//                    if (isRefresh) {
+//                        isRefreshing = false
+//                    }
+//                    onComplete?.invoke()
+//                }
+//            }
+//        }
+//
+//        fun loadNextPage(classValue: String) {
+//            Log.d("TAG", "loadNextPage: $isLoadingg  $currentPage    $isLastPage")
+//            getClassesPaginated(classValue)
+//        }
+//
+//        fun refreshClasses(classValue: String) {
+//            currentPage = 1
+//            isLastPage = false
+//            getClasses(classValue, isRefresh = true)
+//        }
+
+
+    private val _allCoursesOld: MutableStateFlow<Response<List<CourseItem>>> =
+        MutableStateFlow(Response.Loading())
+    val coursesOld = _allCoursesOld.asStateFlow()
+
+
+    val neetCoursesOld = mutableListOf<CourseItem>()
+    val jeeCoursesOld = mutableListOf<CourseItem>()
+    val boardCoursesOld = mutableListOf<CourseItem>()
+    val vidyapeethCoursesOld = mutableListOf<CourseItem>()
+    val freeCoursesOld = mutableListOf<CourseItem>()
+    val youtubeCoursesOld = mutableListOf<CourseItem>()
+    val otherCoursesOld = mutableListOf<CourseItem>()
+
+
+    fun getClassesOld(
+        classValue: String,
+        isRefresh: Boolean = false,
+        onComplete: (() -> Unit)? = null,
+    ) {
+        viewModelScope.launch {
+            try {
+                if (!isRefresh) {
+                    _allCoursesOld.value = Response.Loading()
+                }
+                val response = repository.getAllCoursesOld(classValue)
+
+                neetCoursesOld.clear()
+                jeeCoursesOld.clear()
+                boardCoursesOld.clear()
+                vidyapeethCoursesOld.clear()
+                freeCoursesOld.clear()
+                youtubeCoursesOld.clear()
+                otherCoursesOld.clear()
+                response?.forEach {
+                    val name = it.name.lowercase()
+                    val byName = it.byName.lowercase()
+
+                    when {
+                        name.contains("neet") -> neetCoursesOld.add(it)
+                        name.contains("jee") -> jeeCoursesOld.add(it)
+                        name.contains("board") -> boardCoursesOld.add(it)
+                        name.contains("vidyapeeth") -> vidyapeethCoursesOld.add(it)
+                        name.contains("free") -> freeCoursesOld.add(it)
+                        name.contains("yt") || byName.contains("youtube") -> youtubeCoursesOld.add(
+                            it
+                        )
+
+                        else -> otherCoursesOld.add(it)
+                    }
+
+                }
+
+                _allCoursesOld.value = Response.Success(response!!)
+            } catch (e: SocketTimeoutException) {
+                _allCoursesOld.value =
+                    Response.Error(socketErrorMsg)
+            } catch (e: UnknownHostException) {
+                _allCoursesOld.value = Response.Error(noInternetMsg)
+            } catch (e: Exception) {
+                _allCoursesOld.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+            } finally {
+                if (isRefresh) {
+                    isRefreshing = false
+                }
+                onComplete?.invoke()
+            }
+        }
+    }
+
+    fun refreshAllCoursesOld(
+        classValue: String,
+        onComplete: () -> Unit,
+    ) {
+        isRefreshing = true
+        getClassesOld(classValue = classValue, isRefresh = true) {
+            isRefreshing = false
+            onComplete()
+        }
+    }
+
+
+    private val _allSubjectsOld: MutableStateFlow<ResponseTwo<BatchDetails?>> =
         MutableStateFlow(ResponseTwo.Loading())
     val subjectsOld = _allSubjectsOld.asStateFlow()
 
-    val subjectsListOld = mutableListOf<SubjectWithTeachersAndImageId?>()
-    val teachersListOld = mutableListOf<TeacherIdWithImage?>()
+    val subjectsListOld = mutableListOf<com.xerox.studyrays.model.pwModel.batchDetails.Subject?>()
+    val teachersListOld = mutableListOf<TeacherId?>()
 
     fun getAllSubjectsOld(
         courseId: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null
-        ) {
+    ) {
         viewModelScope.launch {
             try {
-                if (!isRefresh){
+                if (!isRefresh) {
                     _allSubjectsOld.value = ResponseTwo.Loading()
                 }
-                val response = if(fromApi) repository.getAllSubjectsFromApi(courseId) else repository.getAllSubjects(courseId)
+                val response = repository.getAllSubjects(courseId)
                 if (response.subjects.isEmpty()) {
                     _allSubjectsOld.value = ResponseTwo.Nothing()
                     return@launch
@@ -374,7 +663,8 @@ class MainViewModel @Inject constructor(
             } catch (e: UnknownHostException) {
                 _allSubjectsOld.value = ResponseTwo.Error(noInternetMsg)
             } catch (e: Exception) {
-                _allSubjectsOld.value = ResponseTwo.Error(e.localizedMessage ?: "An error occurred.")
+                _allSubjectsOld.value =
+                    ResponseTwo.Error(e.localizedMessage ?: "An error occurred.")
             } finally {
                 if (isRefresh) {
                     isRefreshing = false
@@ -393,7 +683,6 @@ class MainViewModel @Inject constructor(
         getAllSubjectsOld(
             courseId = courseId,
             isRefresh = true,
-            fromApi = true
         ) {
             isRefreshing = false
             onComplete()
@@ -412,7 +701,6 @@ class MainViewModel @Inject constructor(
         classValue: String,
         slug: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -420,19 +708,13 @@ class MainViewModel @Inject constructor(
                 if (!isRefresh) {
                     _allSubjects.value = ResponseTwo.Loading()
                 }
-                val response = if (fromApi)
-                    repository.getBatchDetailsFromApi(
-                        batchId = batchId,
-                        batchSlug = slug,
-                        classValue = classValue
-                    ) else
-                    repository.getBatchDetails(
-                        batchId = batchId,
-                        batchSlug = slug,
-                        classValue = classValue
-                    )
+                val response = repository.getBatchDetails(
+                    batchId = batchId,
+                    batchSlug = slug,
+                    classValue = classValue
+                )
 
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<BatchDetailsssItem>? =
                     gson.fromJson(decryptedData, Array<BatchDetailsssItem>::class.java)?.toList()
@@ -484,32 +766,37 @@ class MainViewModel @Inject constructor(
             batchId = batchId,
             classValue = classValue,
             slug = slug,
-            isRefresh = true, fromApi = true
+            isRefresh = true
         ) {
             isRefreshing = false
             onComplete()
         }
     }
 
-    private val _allFavSubjects: MutableStateFlow<ResponseTwo<BatchDetailsWithSubjects>> =
+    private val _allFavSubjects: MutableStateFlow<ResponseTwo<List<FavouriteCourse?>>> =
         MutableStateFlow(ResponseTwo.Nothing())
     val favSubjects = _allFavSubjects.asStateFlow()
 
-    var favCourseList = mutableListOf<BatchDetailsEntity?>(null)
+    var favCourseList = mutableListOf<FavouriteCourse?>(null)
 
-    fun getAllFavSubjects(courseId: String) {
+    fun getAllFavSubjects() {
         viewModelScope.launch {
 
             favCourseList.clear()
             try {
                 _allFavSubjects.value = ResponseTwo.Loading()
-//                val response = repository.getAllSubjects(courseId)
-//                if (response.subjects.isEmpty()) {
-//                    _allSubjects.value = ResponseTwo.Nothing()
-//                    return@launch
-//                }
-//                favCourseList.add(response.batchDetails)
-//                _allFavSubjects.value = ResponseTwo.Success(response)
+                repository.getAllFavouriteCourses().collect {
+                    if (it.isNullOrEmpty()) {
+                        _allFavSubjects.value = ResponseTwo.Nothing()
+                    } else {
+                        it.forEach { item ->
+                            favCourseList.add(item)
+                        }
+
+                        _allFavSubjects.value = ResponseTwo.Success(it)
+                    }
+                }
+
             } catch (e: SocketTimeoutException) {
                 _allFavSubjects.value = ResponseTwo.Error(socketErrorMsg)
             } catch (e: UnknownHostException) {
@@ -523,7 +810,7 @@ class MainViewModel @Inject constructor(
 
 
     //    Promo
-    private val _promo: MutableStateFlow<Response<List<PromoEntity?>?>> =
+    private val _promo: MutableStateFlow<Response<List<PromoItem?>?>> =
         MutableStateFlow(Response.Loading())
     val promo = _promo.asStateFlow()
 
@@ -540,13 +827,12 @@ class MainViewModel @Inject constructor(
     }
 
 
-    private val _allLessonsOld: MutableStateFlow<Response<List<PwLessonEntity>>> =
+    private val _allLessonsOld: MutableStateFlow<Response<List<LessonItem>>> =
         MutableStateFlow(Response.Loading())
     val lessonsOld = _allLessonsOld.asStateFlow()
 
     fun getAllLessonsOld(
         subjectId: String, isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -554,8 +840,7 @@ class MainViewModel @Inject constructor(
                 if (!isRefresh) {
                     _allLessonsOld.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAllLessonsOldFromApi(subjectId)
-                else repository.getAllLessonsOld(subjectId)
+                val response = repository.getAllLessonsOld(subjectId)
                 _allLessonsOld.value = Response.Success(response!!)
             } catch (e: SocketTimeoutException) {
                 _allLessonsOld.value =
@@ -575,7 +860,7 @@ class MainViewModel @Inject constructor(
 
     fun refreshAllLessonsOld(subjectId: String, onComplete: () -> Unit) {
         isRefreshing = true
-        getAllLessonsOld(subjectId = subjectId, isRefresh = true, fromApi = true) {
+        getAllLessonsOld(subjectId = subjectId, isRefresh = true) {
             isRefreshing = false
             onComplete()
         }
@@ -590,7 +875,6 @@ class MainViewModel @Inject constructor(
         batchId: String,
         subjectSlug: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -598,14 +882,11 @@ class MainViewModel @Inject constructor(
                 if (!isRefresh) {
                     _allLessons.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAllLessonsFromApi(
-                    batchId = batchId,
-                    subjectSlug = subjectSlug
-                )
-                else repository.getAllLessons(batchId = batchId, subjectSlug = subjectSlug)
+                val response =
+                    repository.getAllLessons(batchId = batchId, subjectSlug = subjectSlug)
 
 
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<LessonItem>? =
                     gson.fromJson(decryptedData, Array<LessonItem>::class.java)?.toList()
@@ -640,7 +921,6 @@ class MainViewModel @Inject constructor(
             batchId = batchId,
             subjectSlug = subjectSlug,
             isRefresh = true,
-            fromApi = true
         ) {
             isRefreshing = false
             onComplete()
@@ -655,7 +935,6 @@ class MainViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun getAllVideosOld(
         slug: String, isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -663,9 +942,8 @@ class MainViewModel @Inject constructor(
                 if (!isRefresh) {
                     _allVideosOld.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAllVideosFromApiOld(slug)
-                else repository.getAllVideosOld(slug)
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val response = repository.getAllVideosOld(slug)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<VideoOldItem> =
                     gson.fromJson(decryptedData, Array<VideoOldItem>::class.java).toList()
@@ -689,7 +967,7 @@ class MainViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun refreshAllVideosOld(slug: String, onComplete: () -> Unit) {
         isRefreshing = true
-        getAllVideosOld(slug = slug, isRefresh = true, fromApi = true) {
+        getAllVideosOld(slug = slug, isRefresh = true) {
             isRefreshing = false
             onComplete()
         }
@@ -699,38 +977,145 @@ class MainViewModel @Inject constructor(
         MutableStateFlow(Response.Loading())
     val videos = _allVideos.asStateFlow()
 
+//    @RequiresApi(Build.VERSION_CODES.O)
+//    fun getAllVideos(
+//        topicSlug: String,
+//        subjectSlug: String,
+//        batchId: String,
+//        isRefresh: Boolean = false,
+//        onComplete: (() -> Unit)? = null,
+//    ) {
+//        viewModelScope.launch {
+//            try {
+//                if (!isRefresh) {
+//                    _allVideos.value = Response.Loading()
+//                }
+//                val response = repository.getAllVideos(
+//                    batchId = batchId,
+//                    subjectSlug = subjectSlug,
+//                    topicSlug = topicSlug
+//                )
+//
+//                val decodedData = Base64.getDecoder().decode(response)
+//                val decryptedData = decrypt(decodedData, key, iv)
+//                val data: List<VideoItem>? =
+//                    gson.fromJson(decryptedData, Array<VideoItem>::class.java)?.toList()
+//                if (data == null) {
+//                    throw NullPointerException(nullErrorMsg)
+//                } else {
+//                    _allVideos.value = Response.Success(data)
+//                }
+//            } catch (e: SocketTimeoutException) {
+//                _allVideos.value =
+//                    Response.Error(socketErrorMsg)
+//            } catch (e: UnknownHostException) {
+//                _allVideos.value = Response.Error(noInternetMsg)
+//            } catch (e: Exception) {
+//                _allVideos.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+//            } finally {
+//                if (isRefresh) {
+//                    isRefreshing = false
+//                }
+//                onComplete?.invoke()
+//            }
+//        }
+//    }
+
+    fun loadNextItems(
+        topicSlug: String,
+        subjectSlug: String,
+        batchId: String,
+    ) {
+        viewModelScope.launch {
+            if ((scrollPosition + 1) >= (state.page * PAGE_SIZE)) {
+                state = state.copy(isLoading = true)
+                incrementPage()
+                delay(1000)
+
+                if (state.page > 1) {
+                    val result = repository.getAllVideosPaginated(
+                        batchId = batchId,
+                        subjectSlug = subjectSlug,
+                        topicSlug = topicSlug,
+                        page = state.page,
+                        limit = PAGE_SIZE
+                    )
+
+                    val decodedData = Base64.getDecoder().decode(result)
+                    val decryptedData = decrypt(decodedData, key, iv)
+                    val data: List<VideoItem>? =
+                        gson.fromJson(decryptedData, Array<VideoItem>::class.java)?.toList()
+                    if (data == null) {
+                        state = state.copy(error = nullErrorMsg)
+                    } else {
+                        addNewVideos(data)
+                    }
+                }
+                state = state.copy(isLoading = false)
+
+
+            }
+
+        }
+
+
+    }
+
+    private var scrollPosition = 0
+
+    private fun incrementPage() {
+        state = state.copy(page = state.page + 1)
+    }
+
+    fun onChangeScrollPosition(position: Int) {
+        scrollPosition = position
+    }
+
+    private fun addNewVideos(items: List<VideoItem>) {
+        state = state.copy(items = state.items + items)
+    }
+
+    data class ScreenState(
+        val isLoading: Boolean = false,
+        val items: List<VideoItem> = emptyList(),
+        val error: String? = null,
+        val endReached: Boolean = false,
+        val page: Int = 0
+    )
+
+    var state by mutableStateOf(ScreenState())
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun getAllVideos(
         topicSlug: String,
         subjectSlug: String,
         batchId: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
+
+            state = state.copy(page = 1)
+            onChangeScrollPosition(0)
+
             try {
                 if (!isRefresh) {
                     _allVideos.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAllVideosFromApi(
-                    batchId = batchId,
-                    subjectSlug = subjectSlug,
-                    topicSlug = topicSlug
-                )
-                else repository.getAllVideos(
+                val response = repository.getAllVideos(
                     batchId = batchId,
                     subjectSlug = subjectSlug,
                     topicSlug = topicSlug
                 )
 
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<VideoItem>? =
                     gson.fromJson(decryptedData, Array<VideoItem>::class.java)?.toList()
                 if (data == null) {
                     throw NullPointerException(nullErrorMsg)
                 } else {
+                    state = state.copy(items = data)
                     _allVideos.value = Response.Success(data)
                 }
             } catch (e: SocketTimeoutException) {
@@ -749,6 +1134,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun refreshAllVideos(
         topicSlug: String,
@@ -762,27 +1148,28 @@ class MainViewModel @Inject constructor(
             subjectSlug = subjectSlug,
             topicSlug = topicSlug,
             isRefresh = true,
-            fromApi = true
-        ) {
+
+            ) {
             isRefreshing = false
             onComplete()
         }
     }
 
-    private val _allNotesOld: MutableStateFlow<Response<List<PwNotesEntity>>> =
+
+    private val _allNotesOld: MutableStateFlow<Response<List<NoteOldItem>>> =
         MutableStateFlow(Response.Loading())
     val notesOld = _allNotesOld.asStateFlow()
 
-    fun getAllNotesOld(slug: String, isRefresh: Boolean = false,
-                    fromApi: Boolean = false,
-                    onComplete: (() -> Unit)? = null,) {
+    fun getAllNotesOld(
+        slug: String, isRefresh: Boolean = false,
+        onComplete: (() -> Unit)? = null,
+    ) {
         viewModelScope.launch {
             try {
-                if (!isRefresh){
+                if (!isRefresh) {
                     _allNotesOld.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAllNotesFromApiOld(slug)
-                else repository.getAllNotesOld(slug)
+                val response = repository.getAllNotesOld(slug)
                 _allNotesOld.value = Response.Success(response ?: emptyList())
             } catch (e: SocketTimeoutException) {
                 _allNotesOld.value =
@@ -802,7 +1189,7 @@ class MainViewModel @Inject constructor(
 
     fun refreshAllNotesOld(slug: String, onComplete: () -> Unit) {
         isRefreshing = true
-        getAllNotesOld(slug = slug, isRefresh = true, fromApi = true) {
+        getAllNotesOld(slug = slug, isRefresh = true) {
             isRefreshing = false
             onComplete()
         }
@@ -817,7 +1204,6 @@ class MainViewModel @Inject constructor(
         subjectSlug: String,
         batchId: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -825,18 +1211,13 @@ class MainViewModel @Inject constructor(
                 if (!isRefresh) {
                     _allNotes.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAllNotesFromApi(
-                    batchId = batchId,
-                    subjectSlug = subjectSlug,
-                    topicSlug = topicSlug,
-                )
-                else repository.getAllNotes(
+                val response = repository.getAllNotes(
                     batchId = batchId,
                     subjectSlug = subjectSlug,
                     topicSlug = topicSlug,
                 )
 
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<NoteItem>? =
                     gson.fromJson(decryptedData, Array<NoteItem>::class.java)?.toList()
@@ -873,7 +1254,6 @@ class MainViewModel @Inject constructor(
             batchId = batchId,
             subjectSlug = subjectSlug,
             topicSlug = topicSlug, isRefresh = true,
-            fromApi = true
         ) {
             isRefreshing = false
             onComplete()
@@ -881,20 +1261,21 @@ class MainViewModel @Inject constructor(
     }
 
 
-    private val _allDppOld: MutableStateFlow<Response<List<PwDppEntity>>> =
+    private val _allDppOld: MutableStateFlow<Response<List<DppOldItem>>> =
         MutableStateFlow(Response.Loading())
     val dppOld = _allDppOld.asStateFlow()
 
-    fun getAllDppOld(slug: String, isRefresh: Boolean = false,
-                  fromApi: Boolean = false,
-                  onComplete: (() -> Unit)? = null,) {
+    fun getAllDppOld(
+        slug: String,
+        isRefresh: Boolean = false,
+        onComplete: (() -> Unit)? = null,
+    ) {
         viewModelScope.launch {
             try {
-                if (!isRefresh){
+                if (!isRefresh) {
                     _allDppOld.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAllDppFromApiOld(slug)
-                else repository.getAllDppOld(slug)
+                val response = repository.getAllDppOld(slug)
                 _allDppOld.value = Response.Success(response!!)
             } catch (e: SocketTimeoutException) {
                 _allDppOld.value =
@@ -914,7 +1295,7 @@ class MainViewModel @Inject constructor(
 
     fun refreshAllDppOld(slug: String, onComplete: () -> Unit) {
         isRefreshing = true
-        getAllDppOld(slug = slug, isRefresh = true, fromApi = true) {
+        getAllDppOld(slug = slug, isRefresh = true) {
             isRefreshing = false
             onComplete()
         }
@@ -929,7 +1310,6 @@ class MainViewModel @Inject constructor(
         subjectSlug: String,
         batchId: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -937,18 +1317,13 @@ class MainViewModel @Inject constructor(
                 if (!isRefresh) {
                     _allDpp.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAllDppFromApi(
-                    batchId = batchId,
-                    subjectSlug = subjectSlug,
-                    topicSlug = topicSlug,
-                )
-                else repository.getAllDpp(
+                val response = repository.getAllDpp(
                     batchId = batchId,
                     subjectSlug = subjectSlug,
                     topicSlug = topicSlug,
                 )
 
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<DppItem>? =
                     gson.fromJson(decryptedData, Array<DppItem>::class.java)?.toList()
@@ -986,7 +1361,6 @@ class MainViewModel @Inject constructor(
             subjectSlug = subjectSlug,
             topicSlug = topicSlug,
             isRefresh = true,
-            fromApi = true
         ) {
             isRefreshing = false
             onComplete()
@@ -1010,7 +1384,8 @@ class MainViewModel @Inject constructor(
             } catch (e: UnknownHostException) {
                 _allDppSolutionOld.value = Response.Error(noInternetMsg)
             } catch (e: Exception) {
-                _allDppSolutionOld.value = Response.Error(e.localizedMessage ?: "An error occurred.")
+                _allDppSolutionOld.value =
+                    Response.Error(e.localizedMessage ?: "An error occurred.")
             }
         }
     }
@@ -1033,7 +1408,7 @@ class MainViewModel @Inject constructor(
                     topicSlug = topicSlug,
                 )
 
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<DppSolutionItem>? =
                     gson.fromJson(decryptedData, Array<DppSolutionItem>::class.java)?.toList()
@@ -1095,6 +1470,10 @@ class MainViewModel @Inject constructor(
                 _searchOld.value = ResponseTwo.Error(e.localizedMessage ?: "An error occurred.")
             }
         }
+    }
+
+    fun removeQueriesOld() {
+        _searchOld.value = ResponseTwo.Nothing()
     }
 
 
@@ -1210,27 +1589,47 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private val _navigate: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val navigate: StateFlow<Boolean> = _navigate.asStateFlow()
+//    private val _navigate: MutableStateFlow<Boolean> = MutableStateFlow(false)
+//    val navigate: StateFlow<Boolean> = _navigate.asStateFlow()
+//
+//
+//    fun checkStartDestination() {
+//        viewModelScope.launch {
+//            Log.d("TAG", "checkStartDestination: chechking start destination now")
+//            val key = repository.getKey(1)
+//            if (key == null || key.timeToTriggerAt <= System.currentTimeMillis()) {
+//                _navigate.value = true
+//                Log.d("TAG", "checkStartDestination: key = $key")
+//                if (key != null) {
+//                    repository.deleteKey(key)
+//                }
+//                getKeyTask()
+//            } else {
+//                _navigate.value = false
+//            }
+//            Log.d("TAG", "checkStartDestination: ${_navigate.value}")
+//        }
+//    }
 
 
-    fun checkStartDestination() {
+    fun checkStartDestinationDuringNavigation(onNavigate: () -> Unit) {
         viewModelScope.launch {
-            Log.d("TAG", "checkStartDestination: chechking start destination now")
-            val key = repository.getKey(1)
-            if (key == null || key.timeToTriggerAt <= System.currentTimeMillis()) {
-                _navigate.value = true
-                Log.d("TAG", "checkStartDestination: key = $key")
-                if (key != null) {
-                    repository.deleteKey(key)
+            val responseDeferred = async { repository.getKeyTask() }
+            val response = responseDeferred.await()
+            if (response.visible == "1") {
+                val key = repository.getKey(1)
+                if (key == null || key.timeToTriggerAt <= System.currentTimeMillis()) {
+                    onNavigate()
+                    if (key != null) {
+                        repository.deleteKey(key)
+                    }
                 }
-                getKeyTask()
-            } else {
-                _navigate.value = false
+
             }
-            Log.d("TAG", "checkStartDestination: ${_navigate.value}")
+
         }
     }
+
 //    Watch later
 
     private val _isSavedWatchLater: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -1266,7 +1665,6 @@ class MainViewModel @Inject constructor(
         MutableStateFlow(Response.Loading())
     val watchLater = _watchLater.asStateFlow()
 
-    val akWatchLater = mutableListOf<WatchLaterEntity>()
     val pwWatchLater = mutableListOf<WatchLaterEntity>()
     val khazanaWatchLater = mutableListOf<WatchLaterEntity>()
 
@@ -1278,7 +1676,6 @@ class MainViewModel @Inject constructor(
                 repository.getAllWatchLater().collect { list ->
                     _watchLater.value = Response.Success(list)
 
-                    akWatchLater.clear()
                     pwWatchLater.clear()
                     khazanaWatchLater.clear()
 
@@ -1286,10 +1683,6 @@ class MainViewModel @Inject constructor(
                         when {
                             item.isPw -> {
                                 pwWatchLater.add(item)
-                            }
-
-                            item.isAk -> {
-                                akWatchLater.add(item)
                             }
 
                             item.isKhazana -> {
@@ -1308,10 +1701,11 @@ class MainViewModel @Inject constructor(
 
 //    Timeline
 
-    private val _timeline: MutableStateFlow<Response<List<TimelineItem>?>> = MutableStateFlow(Response.Loading())
+    private val _timeline: MutableStateFlow<Response<List<TimelineItem>?>> =
+        MutableStateFlow(Response.Loading())
     val timeline: StateFlow<Response<List<TimelineItem>?>> = _timeline.asStateFlow()
 
-    fun getTimeline(externalId: String){
+    fun getTimeline(externalId: String) {
         viewModelScope.launch {
             try {
                 _timeline.value = Response.Loading()
@@ -1325,14 +1719,13 @@ class MainViewModel @Inject constructor(
                 } else {
                     _timeline.value = Response.Success(data)
                 }
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 _timeline.value = Response.Error(e.localizedMessage ?: "An error occurred")
             }
         }
     }
 
 //    Announcements
-
 
 
     private val _announcements: MutableStateFlow<Response<List<AnnouncementItem>?>> =
@@ -1343,7 +1736,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _announcements.value = Response.Loading()
-                if(isOld){
+                if (isOld) {
                     val response = repository.getAnnouncements(batchId)
                     _announcements.value = Response.Success(response)
                 } else {
@@ -1377,6 +1770,19 @@ class MainViewModel @Inject constructor(
             context.startActivity(intent)
         } else {
             Toast.makeText(context, "No app found to handle this link", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun openYouTubeVideo(context: Context, videoUrl: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)).apply {
+            // This line ensures that the intent opens in the YouTube app if it's available.
+            setPackage("com.google.android.youtube")
+        }
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            // Fallback to the browser if YouTube app is not available
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl)))
         }
     }
 

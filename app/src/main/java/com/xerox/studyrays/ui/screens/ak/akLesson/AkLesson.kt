@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.network.Response
+import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.screens.ak.AkViewModel
 import com.xerox.studyrays.ui.theme.MainPurple
 import com.xerox.studyrays.utils.DataNotFoundScreen
@@ -63,14 +64,28 @@ fun AkLesson(
     sid: Int,
     bid: Int,
     onClick: (Int, Int, Int) -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
+    mainViewModel: MainViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
 ) {
 
+    val state by vm.akLesson.collectAsState()
+    val result = state
+
     LaunchedEffect(key1 = Unit) {
-        vm.getAkLesson(sid = sid, bid = bid)
+        if (result !is Response.Success) {
+            vm.getAkLesson(sid = sid, bid = bid)
+        }
+
+        mainViewModel.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
+            }
+        )
+
     }
 
-    val state by vm.akLesson.collectAsState()
+
     val snackBarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -100,7 +115,7 @@ fun AkLesson(
         }
     ) {
 
-        when (val result = state) {
+        when (result) {
             is Response.Error -> {
 
                 DataNotFoundScreen(
@@ -120,18 +135,20 @@ fun AkLesson(
 
             is Response.Success -> {
 
+                val list = remember { result.data.data.batch_topic }
+
                 Column(
                     modifier = Modifier
                         .padding(it)
                         .fillMaxSize()
                 ) {
 
-                    if (result.data.data.batch_topic.isEmpty()) {
+                    if (list.isEmpty()) {
                         NoFilesFoundScreen()
                     } else {
 
                         PullToRefreshLazyColumn(
-                            items = result.data.data.batch_topic,
+                            items = list,
                             content = {
                                 EachCardForAkLessons(
                                     lessonName = it.topicName,

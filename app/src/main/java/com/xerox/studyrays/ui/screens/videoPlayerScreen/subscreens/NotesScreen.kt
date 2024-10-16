@@ -69,10 +69,12 @@ import kotlinx.coroutines.launch
 fun NotesScreen(
     modifier: Modifier = Modifier,
     vm: VideoViewModel = hiltViewModel(),
-    position: Long,
     videoId: String,
     onNoteClick: (Long) -> Unit,
 ) {
+
+    val state by vm.videoNotes.collectAsState()
+    val result = state
 
     LaunchedEffect(key1 = Unit) {
         vm.getVideoNotesById(videoId)
@@ -88,14 +90,11 @@ fun NotesScreen(
 
     var noteItem by remember { mutableStateOf<VideoNoteEntity?>(null) }
 
-
-    val state by vm.videoNotes.collectAsState()
-
-
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(title = { Text(text = "Notes") },
+            TopAppBar(
+                title = { Text(text = "Notes") },
                 scrollBehavior = scrollBehavior
             )
 
@@ -112,29 +111,36 @@ fun NotesScreen(
         }
     ) {
 
+
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start,
             modifier = modifier
                 .padding(it)
+                .padding(2.dp)
                 .fillMaxSize()
         ) {
+
+//            TopAppBar(
+//                title = { Text(text = "Notes") },
+//                scrollBehavior = scrollBehavior
+//            )
 
             HorizontalDivider(modifier = modifier.fillMaxWidth(), thickness = 1.dp)
 
 
             AddNotesAlertDialog(
                 noteText = note,
-                onNoteChanged = {note = it },
+                onNoteChanged = { note = it },
                 onButtonClicked = {
                     vm.insertVideoNote(
-                            VideoNoteEntity(
-                                timeStamp = position,
-                                videoId = videoId,
-                                note = note,
-                                id = id
-                            )
+                        VideoNoteEntity(
+                            timeStamp = vm.getPlayerPosition(),
+                            videoId = videoId,
+                            note = note,
+                            id = id
                         )
+                    )
                     note = ""
                     isAdding = false
                     scope.launch {
@@ -145,8 +151,9 @@ fun NotesScreen(
 
                         id = null
                     }
+                    vm.getVideoNotesById(videoId)
                 },
-                position = position,
+                position = vm.getPlayerPosition(),
                 isVisible = isAdding,
                 onDismiss = {
                     isAdding = false
@@ -155,110 +162,114 @@ fun NotesScreen(
                 }
             )
 
-                when (val result = state) {
-                    is Response.Error -> {
-                        DataNotFoundScreen(
-                            errorMsg = result.msg,
-                            state = rememberMessageBarState(),
-                            shouldShowBackButton = false,
-                            paddingValues = it,
-                            onRetryClicked = { vm.getVideoNotesById(videoId) }) {
-                        }
+            when (result) {
+                is Response.Error -> {
+                    DataNotFoundScreen(
+                        errorMsg = result.msg,
+                        state = rememberMessageBarState(),
+                        shouldShowBackButton = false,
+                        paddingValues = PaddingValues(),
+                        onRetryClicked = { vm.getVideoNotesById(videoId) }) {
                     }
+                }
 
-                    is Response.Loading -> {
-                        LoadingScreen(paddingValues = PaddingValues())
-                    }
+                is Response.Loading -> {
+                    LoadingScreen(paddingValues = PaddingValues())
+                }
 
-                    is Response.Success -> {
+                is Response.Success -> {
 
-                        val list = result.data
+                    val list = remember { result.data?.sortedBy { it.timeStamp } }
 
-                        Column(
-                            modifier = modifier
-                                .fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+                    Column(
+                        modifier = modifier
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Top,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
 
-                            if (list.isNullOrEmpty()) {
+                        if (list.isNullOrEmpty()) {
 
-                                val composition by rememberLottieComposition(
-                                    spec = LottieCompositionSpec.RawRes(
-                                        R.raw.comingsoon
-                                    )
+                            val composition by rememberLottieComposition(
+                                spec = LottieCompositionSpec.RawRes(
+                                    R.raw.comingsoon
                                 )
+                            )
 
-                                LottieAnimation(
-                                    composition = composition,
-                                    iterations = LottieConstants.IterateForever,
-                                    modifier = Modifier
-                                        .size(150.dp)
-                                )
+                            LottieAnimation(
+                                composition = composition,
+                                iterations = LottieConstants.IterateForever,
+                                modifier = Modifier
+                                    .size(150.dp)
+                            )
 
-                                SpacerHeight(dp = 10.dp)
+                            SpacerHeight(dp = 10.dp)
 
-                                Text(
-                                    text = "Add Some Notes!", fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp
-                                )
+                            Text(
+                                text = "Add Some Notes!", fontWeight = FontWeight.SemiBold,
+                                fontSize = 18.sp
+                            )
 
-                                SpacerHeight(dp = 10.dp)
+                            SpacerHeight(dp = 10.dp)
 
-                                Text(text = "Click on the '+' button to add notes!")
+                            Text(text = "Click on the '+' button to add notes!")
 
-                            } else {
+                        } else {
 
-                                LazyColumn {
-                                    items(list, key = { it.id!! }) { noteEntity ->
-                                        EachColumnForNotes(
-                                            item = noteEntity,
-                                            onEditClicked = {
+                            LazyColumn {
+                                items(list, key = { it.id!! }) { noteEntity ->
+                                    EachColumnForNotes(
+                                        item = noteEntity,
+                                        onEditClicked = {
                                             note = it.note
                                             id = it.id
                                             isAdding = true
                                         },
-                                            onDeleteClicked = {
-                                                noteItem = it
-                                                vm.deleteVideoNote(it.id!!)
+                                        onDeleteClicked = {
+                                            noteItem = it
+                                            vm.deleteVideoNote(it.id!!)
 
-                                                scope.launch {
-                                                    val resultt = snackbarHostState.showSnackbar(
-                                                        message = "Deleted Successfully.",
-                                                        actionLabel = "Undo",
-                                                        withDismissAction = true,
-                                                        duration = SnackbarDuration.Indefinite
-                                                    )
+                                            scope.launch {
+                                                val resultt = snackbarHostState.showSnackbar(
+                                                    message = "Deleted Successfully.",
+                                                    actionLabel = "Undo",
+                                                    withDismissAction = true,
+                                                    duration = SnackbarDuration.Indefinite
+                                                )
 
-                                                    when(resultt){
-                                                        SnackbarResult.ActionPerformed -> {
-                                                                vm.insertVideoNote(item = noteItem!!)
-                                                        }
-
-                                                        SnackbarResult.Dismissed -> {
-                                                            snackbarHostState.currentSnackbarData?.dismiss()
-                                                        }
+                                                when (resultt) {
+                                                    SnackbarResult.ActionPerformed -> {
+                                                        vm.insertVideoNote(item = noteItem!!)
+                                                        vm.getVideoNotesById(videoId)
                                                     }
 
+                                                    SnackbarResult.Dismissed -> {
+                                                        snackbarHostState.currentSnackbarData?.dismiss()
+                                                    }
                                                 }
 
-                                            },
-                                            onNoteClick = {
-                                                onNoteClick(it)
                                             }
-                                        )
-                                    }
+
+                                            vm.getVideoNotesById(videoId)
+
+                                        },
+                                        onNoteClick = {
+                                            onNoteClick(it)
+                                        }
+                                    )
                                 }
                             }
-
-
                         }
 
 
                     }
+
+
                 }
+            }
 
         }
+
 
     }
 }
@@ -273,54 +284,62 @@ fun EachColumnForNotes(
     onNoteClick: (Long) -> Unit
 ) {
 
-    Row(
-        modifier = modifier.padding(vertical = 10.dp, horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Column(
-            modifier = modifier
-                .weight(8f)
-                .clickable {
-                    onNoteClick(item.timeStamp)
-                },
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
 
-            Text(
-                text = Utils.formatVideoDuration(item.timeStamp),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Column(
+                modifier = modifier
+                    .weight(8f)
+                    .clickable {
+                        onNoteClick(item.timeStamp)
+                    },
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ) {
 
-            SpacerHeight(dp = 5.dp)
+                Text(
+                    text = Utils.formatVideoDuration(item.timeStamp),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
 
-            Text(text = item.note)
+                SpacerHeight(dp = 5.dp)
 
-        }
+                Text(text = item.note)
 
-        Column(
-            modifier = modifier
-                .weight(1f),
-            verticalArrangement = Arrangement.SpaceEvenly,
-            horizontalAlignment = Alignment.End
-        ) {
-
-            IconButton(onClick = {
-                onEditClicked(item)
-            }) {
-                Icon(imageVector = Icons.Outlined.Edit, contentDescription = "")
             }
 
-            IconButton(onClick = {
-                onDeleteClicked(item)
-            }) {
-                Icon(imageVector = Icons.Outlined.Delete, contentDescription = "")
-            }
+            Column(
+                modifier = modifier
+                    .weight(1f),
+                verticalArrangement = Arrangement.SpaceEvenly,
+                horizontalAlignment = Alignment.End
+            ) {
 
+                IconButton(onClick = {
+                    onEditClicked(item)
+                }) {
+                    Icon(imageVector = Icons.Outlined.Edit, contentDescription = "")
+                }
+
+                IconButton(onClick = {
+                    onDeleteClicked(item)
+                }) {
+                    Icon(imageVector = Icons.Outlined.Delete, contentDescription = "")
+                }
+
+            }
         }
+
+        HorizontalDivider(modifier = modifier.fillMaxWidth())
     }
 
 }
@@ -335,10 +354,10 @@ fun AddNotesAlertDialog(
     position: Long,
     isVisible: Boolean,
     onDismiss: () -> Unit,
-    ) {
+) {
 
-    if (isVisible){
-        AlertDialog(onDismissRequest = { onDismiss() }, confirmButton = {  },
+    if (isVisible) {
+        AlertDialog(onDismissRequest = { onDismiss() }, confirmButton = { },
             text = {
 
                 Column(

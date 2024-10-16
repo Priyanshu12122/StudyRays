@@ -3,8 +3,8 @@ package com.xerox.studyrays.ui.screens.pw.subjectsAndTeachersScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,8 +33,6 @@ import com.xerox.studyrays.ui.theme.BlueViolet1
 import com.xerox.studyrays.ui.theme.BlueViolet2
 import com.xerox.studyrays.ui.theme.BlueViolet3
 import com.xerox.studyrays.ui.theme.ButtonBlue
-import com.xerox.studyrays.ui.theme.DarkerButtonBlue
-import com.xerox.studyrays.ui.theme.DeepBlue
 import com.xerox.studyrays.ui.theme.LightGreen1
 import com.xerox.studyrays.ui.theme.LightGreen2
 import com.xerox.studyrays.ui.theme.LightGreen3
@@ -42,9 +40,8 @@ import com.xerox.studyrays.ui.theme.LightRed
 import com.xerox.studyrays.ui.theme.OrangeYellow1
 import com.xerox.studyrays.ui.theme.OrangeYellow2
 import com.xerox.studyrays.ui.theme.OrangeYellow3
-import com.xerox.studyrays.ui.theme.TextBlack
-import com.xerox.studyrays.ui.theme.TextWhite
 import com.xerox.studyrays.utils.SpacerHeight
+import com.xerox.studyrays.utils.shimmerEffect
 
 
 @Composable
@@ -84,29 +81,26 @@ fun EachCardForTeacher(
             .shadow(
                 elevation = 20.dp,
                 shape = RoundedCornerShape(10.dp),
-                ambientColor = if (!isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+                ambientColor = Color.DarkGray
             )
             .clip(RoundedCornerShape(10.dp))
-            .background(if (!isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background)
             .clickable {
                 onClick()
             }
             .then(
-                if (isSystemInDarkTheme()) {
-                    Modifier.border(
-                        width = 1.dp,
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                colors.random(),
-                                colors.random(),
-                                colors.random()
-                            )
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                } else {
-                    Modifier
-                }
+                Modifier.border(
+                    width = 1.dp,
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            colors.random(),
+                            colors.random(),
+                            colors.random()
+                        )
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
             )
     ) {
         Column(
@@ -155,6 +149,91 @@ fun EachCardForTeacher(
                 fontSize = 18.sp,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
+        }
+    }
+}
+
+
+@Composable
+fun EachCardForLoadingTeacher(modifier: Modifier = Modifier) {
+
+    val colors = listOf(
+        ButtonBlue,
+        LightRed,
+        AquaBlue,
+        OrangeYellow1,
+        OrangeYellow2,
+        OrangeYellow3,
+        Beige1,
+        Beige2,
+        Beige3,
+        LightGreen1,
+        LightGreen2,
+        LightGreen3,
+        BlueViolet1,
+        BlueViolet2,
+        BlueViolet3
+    )
+
+    Column(
+        modifier = Modifier
+            .padding(10.dp)
+            .fillMaxWidth()
+            .shadow(
+                elevation = 20.dp,
+                shape = RoundedCornerShape(10.dp),
+                ambientColor = Color.DarkGray
+            )
+            .clip(RoundedCornerShape(10.dp))
+            .then(
+                Modifier.border(
+                    width = 1.dp,
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            colors.random(),
+                            colors.random(),
+                            colors.random()
+                        )
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
+            )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            SpacerHeight(dp = 6.dp)
+
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(175.dp)
+                    .border(
+                        1.dp,
+                        shape = CircleShape,
+                        brush = Brush.horizontalGradient(
+                            listOf(
+                                colors.random(),
+                                colors.random()
+                            )
+                        )
+                    )
+                    .shimmerEffect()
+            )
+
+            Box(
+                modifier = modifier
+                    .padding(10.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .fillMaxSize()
+                    .shimmerEffect()
+            )
+
+
         }
     }
 }

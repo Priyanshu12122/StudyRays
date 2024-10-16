@@ -5,10 +5,10 @@ import com.xerox.studyrays.R
 
 sealed class Routes(val icon: Int, val route: String,val title: String){
 
-    object Study: Routes(icon = R.drawable.study, route = NavRoutes.study,title = "Study")
-    object Batches: Routes(icon = R.drawable.pwdarkk, route = NavRoutes.batches,title = "PW")
-    object Test: Routes(icon = R.drawable.treasure, route = NavRoutes.test,title = "Khazana")
-    object PwStore: Routes(icon = R.drawable.akdarkkk, route = NavRoutes.pwStore,title = "Apni Kaksha")
+    object Study: Routes(icon = R.drawable.study, route = NavRoutes.study,title = "Main")
+    object Batches: Routes(icon = R.drawable.studyhours, route = NavRoutes.batches,title = "Study")
+    object Test: Routes(icon = R.drawable.leaderboard, route = NavRoutes.test,title = "Leaderboard")
+    object PwStore: Routes(icon = R.drawable.user, route = NavRoutes.pwStore,title = "User")
 
 }
 
@@ -22,6 +22,7 @@ object NavRoutes{
     const val announcementsScreen = "announcementsScreen"
 
     const val eachClass = "eachClass"
+    const val eachClassOld = "eachClassOld"
     const val subjectsScreen = "subjects"
     const val subjectsScreenOld = "subjectsScreenOld"
     const val lessonsScreen = "lessons"
@@ -58,9 +59,17 @@ object NavRoutes{
     const val studyFocusSubjectDetailsScreen = "studyFocusSubjectDetailsScreen"
     const val taskStudyFocusScreen = "taskStudyFocusScreen"
     const val sessionScreen = "sessionScreen"
+
+//    user and leaderboard
+    const val welcomeScreen = "welcomeScreen"
+    const val loginScreen = "loginScreen"
+    const val createAccountScreen = "createAccountScreen"
+    const val userScreen = "userScreen"
+    const val editDetailsScreen = "editDetailsScreen"
 }
 
 object NavGraphRoutes{
     const val bottomBarNavigation = "bottom"
     const val mainScreenNavigation = "main"
+    const val userScreenNavigation = "userScreenNavigation"
 }

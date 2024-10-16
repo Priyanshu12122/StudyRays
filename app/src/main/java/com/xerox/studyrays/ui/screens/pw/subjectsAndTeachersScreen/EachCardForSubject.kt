@@ -3,7 +3,6 @@ package com.xerox.studyrays.ui.screens.pw.subjectsAndTeachersScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.xerox.studyrays.utils.shimmerEffect
 
 
 @Composable
@@ -46,23 +46,20 @@ fun EachCardForSubject(
             .shadow(
                 elevation = 20.dp,
                 shape = RoundedCornerShape(10.dp),
-                ambientColor = if (!isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+                ambientColor = Color.LightGray
             )
             .clip(RoundedCornerShape(10.dp))
-            .background(if (!isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background)
             .clickable {
                 onClick()
             }
             .then(
-                if (isSystemInDarkTheme()) {
-                    Modifier.border(
-                        1.dp,
-                        Color.White.copy(0.6f),
-                        RoundedCornerShape(10.dp)
-                    )
-                } else {
-                    Modifier
-                }
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
+
             )
     ) {
         Column(
@@ -94,11 +91,81 @@ fun EachCardForSubject(
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 4.dp)
+                modifier = Modifier
+                    .padding(horizontal = 4.dp)
+
+
             )
 
         }
 
     }
+
+}
+
+@Composable
+fun EachCardForSubjectLoading(modifier: Modifier = Modifier) {
+
+    Column(
+        modifier = modifier
+            .padding(10.dp)
+            .height(120.dp)
+            .width(80.dp)
+            .shadow(
+                elevation = 20.dp,
+                shape = RoundedCornerShape(10.dp),
+                ambientColor = Color.LightGray
+            )
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .then(
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
+
+            )
+    ) {
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            AsyncImage(
+                model = "",
+                contentDescription = "",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .padding(10.dp)
+                    .size(50.dp)
+                    .clip(
+                        RoundedCornerShape(8.dp)
+                    )
+                    .shimmerEffect(),
+
+                )
+            Spacer(modifier = Modifier.size(8.dp))
+
+            Text(
+                text = "",
+                style = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 13.sp
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .padding(horizontal = 4.dp)
+                    .shimmerEffect()
+
+
+            )
+
+        }
+    }
+
 
 }

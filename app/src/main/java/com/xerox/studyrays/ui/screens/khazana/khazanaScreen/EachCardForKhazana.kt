@@ -3,7 +3,6 @@ package com.xerox.studyrays.ui.screens.khazana.khazanaScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -30,11 +29,12 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.xerox.studyrays.R
-import com.xerox.studyrays.cacheDb.khazanaCache.khazanaDb.KhazanaEntity
+import com.xerox.studyrays.model.khazanaModel.khazana.KhazanaItem
+import com.xerox.studyrays.utils.shimmerEffect
 
 @Composable
 fun EachCardForKhazana(
-    item: KhazanaEntity,
+    item: KhazanaItem,
     onClick: () -> Unit,
 ) {
 
@@ -46,23 +46,20 @@ fun EachCardForKhazana(
             .shadow(
                 elevation = 20.dp,
                 shape = RoundedCornerShape(10.dp),
-                ambientColor = if (!isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+                ambientColor = Color.LightGray
             )
             .clip(RoundedCornerShape(10.dp))
-            .background(if (!isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background)
             .clickable {
                 onClick()
             }
             .then(
-                if (isSystemInDarkTheme()) {
-                    Modifier.border(
-                        1.dp,
-                        Color.White.copy(0.6f),
-                        RoundedCornerShape(10.dp)
-                    )
-                } else {
-                    Modifier
-                }
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
+
             )
     ) {
         val composition by rememberLottieComposition(
@@ -75,7 +72,6 @@ fun EachCardForKhazana(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
 
             LottieAnimation(
                 composition = composition,
@@ -94,5 +90,65 @@ fun EachCardForKhazana(
 
 }
 
+@Composable
+fun EachCardForKhazanaLoading() {
 
+    Column(
+        modifier = Modifier
+            .padding(10.dp)
+            .height(150.dp)
+            .width(150.dp)
+            .shadow(
+                elevation = 20.dp,
+                shape = RoundedCornerShape(10.dp),
+                ambientColor = Color.LightGray
+            )
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .then(
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
 
+            )
+    ) {
+        val composition by rememberLottieComposition(
+            spec = LottieCompositionSpec.RawRes(
+                R.raw.khazanaaa
+            )
+        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            LottieAnimation(
+                composition = composition,
+                iterations = LottieConstants.IterateForever,
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .shimmerEffect()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .clip(
+                        RoundedCornerShape(8.dp)
+                    )
+                    .shimmerEffect()
+            )
+
+        }
+
+    }
+
+}

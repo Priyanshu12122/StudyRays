@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -29,7 +31,6 @@ import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.network.ResponseTwo
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
 import com.xerox.studyrays.utils.DataNotFoundScreen
-import com.xerox.studyrays.utils.LoadingScreen
 import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyVerticalGrid
 
@@ -42,11 +43,16 @@ fun KhazanaScreen(
     onBackClicked: () -> Unit,
 ) {
 
+    val state by vm.khazana.collectAsState()
+    val result = state
+
     LaunchedEffect(key1 = Unit) {
-        vm.getKhazana()
+        if (result !is ResponseTwo.Success) {
+            vm.getKhazana()
+        }
     }
 
-    val state by vm.khazana.collectAsState()
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val snackBarHostState = remember { SnackbarHostState() }
 
@@ -89,7 +95,7 @@ fun KhazanaScreen(
         }
     ) { paddingValues ->
 
-        when (val result = state) {
+        when (result) {
             is ResponseTwo.Error -> {
                 val messageState = rememberMessageBarState()
 
@@ -106,7 +112,19 @@ fun KhazanaScreen(
             }
 
             is ResponseTwo.Loading -> {
-                LoadingScreen(paddingValues = paddingValues)
+
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+                    LazyVerticalGrid(GridCells.Fixed(2)) {
+                        items(9) {
+                            EachCardForKhazanaLoading()
+                        }
+                    }
+                }
+
             }
 
             is ResponseTwo.Nothing -> {
@@ -115,7 +133,7 @@ fun KhazanaScreen(
 
             is ResponseTwo.Success -> {
 
-                if (result.data.isEmpty()){
+                if (result.data.isEmpty()) {
                     NoFilesFoundScreen()
                 } else {
                     val list = result.data.sortedBy { it.showorder }

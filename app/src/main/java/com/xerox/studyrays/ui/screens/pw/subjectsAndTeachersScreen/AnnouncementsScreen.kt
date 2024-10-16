@@ -25,12 +25,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.stevdzasan.messagebar.rememberMessageBarState
+import com.xerox.studyrays.R
 import com.xerox.studyrays.model.pwModel.announcementsItem.AnnouncementItem
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
@@ -47,13 +50,16 @@ fun AnnouncementsScreen(
     batchId: String,
     isOld: Boolean,
     onBackClick: () -> Unit,
-    ) {
-
-    LaunchedEffect(key1 = Unit) {
-        vm.getAnnouncements(batchId,isOld)
-    }
+) {
 
     val state by vm.announcements.collectAsState()
+    val result = state
+
+    LaunchedEffect(key1 = Unit) {
+        if (result !is Response.Success) {
+            vm.getAnnouncements(batchId, isOld)
+        }
+    }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -78,14 +84,14 @@ fun AnnouncementsScreen(
         }
     ) { paddingValues ->
 
-        when (val result = state) {
+        when (result) {
             is Response.Error -> {
                 DataNotFoundScreen(
                     errorMsg = result.msg,
                     state = rememberMessageBarState(),
                     paddingValues = paddingValues,
                     shouldShowBackButton = false,
-                    onRetryClicked = { vm.getAnnouncements(batchId,isOld) }) {
+                    onRetryClicked = { vm.getAnnouncements(batchId, isOld) }) {
 
                 }
             }
@@ -152,9 +158,13 @@ fun EachCardForAnnouncements(
         AsyncImage(
             model = item.image_url,
             contentDescription = null,
+            placeholder = painterResource(id = R.drawable.pwrectangle),
+            error = painterResource(id = R.drawable.pwrectangle),
+            fallback = painterResource(id = R.drawable.pwrectangle),
             modifier = modifier
                 .padding(15.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .clip(RoundedCornerShape(10.dp)),
+            contentScale = ContentScale.FillWidth
         )
 
         HorizontalDivider(

@@ -41,6 +41,7 @@ fun PdfViewerScreen(
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val baseUrl = "https://docs.google.com/gview?embedded=true&url="
+//    val baseUrl = "https://devjisu.com/viewpdf.html?s="
     val mainUrl = baseUrl + url
 
     Scaffold(

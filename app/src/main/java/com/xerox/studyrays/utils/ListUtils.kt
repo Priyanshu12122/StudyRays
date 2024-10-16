@@ -28,7 +28,7 @@ val navBarList = listOf(
         "Support Us"
     ),
     DrawerItem(
-        R.drawable.telegramoutlined,
+        R.drawable.telegram,
         "Telegram",
         "Join Telegram"
     ),

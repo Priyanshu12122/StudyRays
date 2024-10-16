@@ -31,7 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun EachClassCard(image: Int, text: String, onClick: () -> Unit) {
+fun EachClassCard(
+    image: Int,
+    text: String,
+    onClick: () -> Unit) {
 
     Column(
         modifier = Modifier

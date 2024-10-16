@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -33,7 +35,7 @@ fun SearchTextField(
     onCrossIconClicked: () -> Unit,
     text: String,
     onSearch: (() -> Unit)? = null,
-    ) {
+) {
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focus = LocalFocusManager.current
@@ -43,8 +45,7 @@ fun SearchTextField(
         onValueChange = { onSearchTextChanged(it) },
         modifier = modifier
             .padding(horizontal = 14.dp, vertical = 8.dp)
-            .fillMaxWidth()
-            ,
+            .fillMaxWidth(),
         placeholder = {
             Text(
                 text = text,
@@ -64,7 +65,7 @@ fun SearchTextField(
         },
         trailingIcon = {
             IconButton(onClick = {
-                if (searchText == ""){
+                if (searchText == "") {
                     keyboardController?.hide()
                     focus.clearFocus()
                 } else {
@@ -85,7 +86,7 @@ fun SearchTextField2(
     searchText: String,
     onSearchTextChanged: (String) -> Unit,
     onCrossIconClicked: () -> Unit,
-    text: String,
+    text: List<String>,
     onFocused: () -> Unit,
     onUnFocused: () -> Unit,
     onSearch: (() -> Unit)? = null,
@@ -111,14 +112,19 @@ fun SearchTextField2(
             .fillMaxWidth()
             .onFocusChanged { focusState ->
                 isFocused = focusState.isFocused
-            }
-        ,
+            },
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        ),
         placeholder = {
-            Text(
-                text = text,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+
+            MarqueeText(textList = text)
+//            Text(
+//                text = text,
+//                maxLines = 1,
+//                overflow = TextOverflow.Ellipsis,
+//            )
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = {
@@ -132,7 +138,7 @@ fun SearchTextField2(
         },
         trailingIcon = {
             IconButton(onClick = {
-                if (searchText == ""){
+                if (searchText == "") {
                     keyboardController?.hide()
                     focus.clearFocus()
                 } else {

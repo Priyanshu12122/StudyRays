@@ -1,6 +1,5 @@
 package com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils
 
-import android.util.Log
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -42,9 +41,16 @@ fun PriceSection(
 ) {
 
     val totalFee by vm.totalFee.collectAsState()
-    when (val fee = totalFee) {
+    val fee = totalFee
+
+    LaunchedEffect(key1 = Unit) {
+        if (fee !is Response.Success) {
+            vm.getTotalFee()
+        }
+    }
+    when (fee) {
         is Response.Error -> {
-            Log.d("TAG", "StudyScreen: error = ${fee.msg}")
+
         }
 
         is Response.Loading -> {
@@ -61,7 +67,7 @@ fun PriceSection(
         }
 
         is Response.Success -> {
-            val price = fee.data.totalAmount
+            val price = fee.data.total_amount
 
             var animateText by rememberSaveable {
                 mutableStateOf(false)
@@ -113,9 +119,11 @@ fun CardForPriceSection(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Column(modifier = Modifier.fillMaxSize(),
+        Column(
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
             Text(
                 text = "Total Batch Fee : ${totalFee.formatToIndianRupees()}",

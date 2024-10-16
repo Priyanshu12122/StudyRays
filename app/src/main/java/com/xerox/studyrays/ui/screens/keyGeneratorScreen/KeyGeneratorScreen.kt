@@ -1,5 +1,7 @@
 package com.xerox.studyrays.ui.screens.keyGeneratorScreen
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.MainViewModel
+import com.xerox.studyrays.ui.screens.mainscreen.mainscreenutils.AlertSection
 import com.xerox.studyrays.ui.theme.TextWhite
 import com.xerox.studyrays.utils.DataNotFoundScreen
 import com.xerox.studyrays.utils.LoadingScreen
@@ -41,6 +47,7 @@ import com.xerox.studyrays.utils.SpacerHeight
 fun KeyGeneratorScreen(
     modifier: Modifier = Modifier,
     vm: MainViewModel = hiltViewModel(),
+    onNavigateToStudyScreen: () -> Unit,
     onClick: (String, String) -> Unit,
 ) {
 
@@ -51,6 +58,20 @@ fun KeyGeneratorScreen(
 
     LaunchedEffect(key1 = Unit) {
         vm.getKeyTask()
+        vm.getAlertItem()
+    }
+
+    var backPressedTime by rememberSaveable { mutableLongStateOf(0L) }
+    val backPressThreshold = 3000
+
+    BackHandler {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - backPressedTime < backPressThreshold) {
+            (context as ComponentActivity).finish()
+        } else {
+            backPressedTime = currentTime
+            vm.showToast(context, "Press back again to exit StudyRays")
+        }
     }
 
     Scaffold(modifier = modifier,
@@ -58,6 +79,8 @@ fun KeyGeneratorScreen(
             TopAppBar(title = { Text(text = "Generate key") })
         }
     ) { paddingValues ->
+
+        AlertSection()
 
         when (result) {
             is Response.Error -> {
@@ -74,56 +97,76 @@ fun KeyGeneratorScreen(
             }
 
             is Response.Success -> {
-                Column(
-                    modifier = modifier
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Card(
-                        modifier = modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+
+                if (result.data.visible == "0") {
+                    onNavigateToStudyScreen()
+                } else {
+
+                    Column(
+                        modifier = modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
+                        Card(
+                            modifier = modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+                        ) {
 
-                        SpacerHeight(dp = 30.dp)
+                            SpacerHeight(dp = 30.dp)
 
-                        Text(
-                            text = " \uD83D\uDD11 Generate access key to use our app for next 24 hours, it only takes about 1-2 minutes.",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 19.sp,
-                            modifier = modifier.padding(vertical = 0.dp, horizontal = 15.dp)
-                        )
+                            Text(
+                                text = " \uD83D\uDD11 Generate access key to use our app for next 24 hours, it only takes about 1-2 minutes.",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 19.sp,
+                                modifier = modifier.padding(vertical = 0.dp, horizontal = 15.dp)
+                            )
 
-                        SpacerHeight(dp = 20.dp)
+                            SpacerHeight(dp = 20.dp)
 
-                        TextButtonWithEmoji(
-                            text = "GENERATE ACCESS KEY \uD83D\uDD11 ",
-                            color = "#009688".toColorInt(),
-                            onClick = {
-                                onClick(result.data.task1_url, result.data.task1_final_url)
-                            }
-                        )
+                            TextButtonWithEmoji(
+                                text = "GENERATE ACCESS KEY \uD83D\uDD11 ",
+                                color = "#009688".toColorInt(),
+                                onClick = {
+                                    onClick(result.data.task1_url, result.data.task1_final_url)
+                                }
+                            )
 
-                        SpacerHeight(dp = 8.dp)
+                            SpacerHeight(dp = 8.dp)
 
-                        TextButtonWithEmoji(
-                            text = "HOW TO USE ❓",
-                            color = "#455a64".toColorInt(),
-                            onClick = {
+                            TextButtonWithEmoji(
+                                text = "HOW TO GENERATE KEY ❓",
+                                color = "#455a64".toColorInt(),
+                                onClick = {
+                                    vm.openYouTubeVideo(context, result.data.tutorial_url)
+
+                                }
+                            )
+
+                            SpacerHeight(dp = 10.dp)
+
+                            TextButtonWithEmoji(
+                                text = "JOIN TELEGRAM ",
+                                color = "#455a64".toColorInt()
+                            ) {
                                 vm.openUrl(context, result.data.telegram)
                             }
-                        )
 
-                        SpacerHeight(dp = 25.dp)
 
+                            SpacerHeight(dp = 25.dp)
+
+                        }
                     }
                 }
+
+
             }
         }
     }
 }
+
 
 @Composable
 fun TextButtonWithEmoji(

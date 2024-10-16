@@ -23,7 +23,7 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.gson.Gson
-import com.xerox.studyrays.data.ApiRepository
+import com.xerox.studyrays.data.AkRepository
 import com.xerox.studyrays.model.akModel.aKVideoU.AkUrl
 import com.xerox.studyrays.model.akModel.akIndex.Index
 import com.xerox.studyrays.model.akModel.akLessons.AkLesson
@@ -49,7 +49,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AkViewModel @Inject constructor(
-    private val repository: ApiRepository,
+    private val repository: AkRepository,
     @ApplicationContext context: Context,
 ) : ViewModel() {
 
@@ -76,7 +76,6 @@ class AkViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun getIndex(
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -84,8 +83,8 @@ class AkViewModel @Inject constructor(
                 if (!isRefresh) {
                     _index.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getIndexFromApi() else repository.getIndex()
-                val decodedData: ByteArray = Base64.getDecoder().decode(response.response)
+                val response = repository.getIndex()
+                val decodedData: ByteArray = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: Index = gson.fromJson(decryptedData, Index::class.java)
                 _index.value = Response.Success(data)
@@ -107,10 +106,13 @@ class AkViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun refreshIndex(onComplete: () -> Unit) {
         isRefreshing = true
-        getIndex(isRefresh = true, fromApi = true, onComplete = {
-            isRefreshing = false
-            onComplete()
-        })
+        getIndex(
+            isRefresh = true,
+            onComplete = {
+                isRefreshing = false
+                onComplete()
+            }
+        )
     }
 
 
@@ -122,7 +124,6 @@ class AkViewModel @Inject constructor(
     fun getAkSubject(
         id: Int,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -130,9 +131,8 @@ class AkViewModel @Inject constructor(
                 if (!isRefresh) {
                     _akSubject.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAkSubjectsFromApi(id)
-                else repository.getAkSubjects(id)
-                val decodedData: ByteArray = Base64.getDecoder().decode(response.response)
+                val response = repository.getAkSubjects(id)
+                val decodedData: ByteArray = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: AkSubject =
                     gson.fromJson(decryptedData, AkSubject::class.java)
@@ -159,7 +159,7 @@ class AkViewModel @Inject constructor(
     ) {
 
         isRefreshing = true
-        getAkSubject(id = id, isRefresh = true, fromApi = true) {
+        getAkSubject(id = id, isRefresh = true) {
             isRefreshing = false
             onComplete()
         }
@@ -176,17 +176,15 @@ class AkViewModel @Inject constructor(
         sid: Int,
         bid: Int,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
             try {
-                if (!isRefresh){
+                if (!isRefresh) {
                     _akLesson.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAkLessonsFromApi(sid = sid, bid = bid)
-                else repository.getAkLessons(sid = sid, bid = bid)
-                val decodedData: ByteArray = Base64.getDecoder().decode(response.response)
+                val response = repository.getAkLessons(sid = sid, bid = bid)
+                val decodedData: ByteArray = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: AkLesson =
                     gson.fromJson(decryptedData, AkLesson::class.java)
@@ -198,7 +196,7 @@ class AkViewModel @Inject constructor(
             } catch (e: Exception) {
                 _akLesson.value = Response.Error(e.localizedMessage ?: "An error occurred.")
             } finally {
-                if (isRefresh){
+                if (isRefresh) {
                     isRefreshing = false
                 }
                 onComplete?.invoke()
@@ -211,9 +209,13 @@ class AkViewModel @Inject constructor(
         bid: Int,
         sid: Int,
         onComplete: () -> Unit
-    ){
+    ) {
         isRefreshing = true
-        getAkLesson(sid = sid, bid = bid, isRefresh = true, fromApi = true) {
+        getAkLesson(
+            sid = sid,
+            bid = bid,
+            isRefresh = true
+        ) {
             isRefreshing = false
             onComplete()
         }
@@ -224,17 +226,20 @@ class AkViewModel @Inject constructor(
     val akVideo = _akVideo.asStateFlow()
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getAkVideo(sid: Int, tid: Int, bid: Int,isRefresh: Boolean = false,
-                   fromApi: Boolean = false,
-                   onComplete: (() -> Unit)? = null,) {
+    fun getAkVideo(
+        sid: Int,
+        tid: Int,
+        bid: Int,
+        isRefresh: Boolean = false,
+        onComplete: (() -> Unit)? = null,
+    ) {
         viewModelScope.launch {
             try {
-                if (!isRefresh){
+                if (!isRefresh) {
                     _akVideo.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAkVideosFromApi(sid = sid, bid = bid, tid = tid)
-                else repository.getAkVideos(sid = sid, bid = bid, tid = tid)
-                val decodedData: ByteArray = Base64.getDecoder().decode(response.response)
+                val response = repository.getAkVideos(sid = sid, bid = bid, tid = tid)
+                val decodedData: ByteArray = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: AkVideo =
                     gson.fromJson(decryptedData, AkVideo::class.java)
@@ -246,7 +251,7 @@ class AkViewModel @Inject constructor(
             } catch (e: Exception) {
                 _akVideo.value = Response.Error(e.localizedMessage ?: "An error occurred.")
             } finally {
-                if (isRefresh){
+                if (isRefresh) {
                     isRefreshing = false
                 }
                 onComplete?.invoke()
@@ -260,9 +265,9 @@ class AkViewModel @Inject constructor(
         sid: Int,
         tid: Int,
         onComplete: () -> Unit
-    ){
+    ) {
         isRefreshing = true
-        getAkVideo(sid = sid, bid = bid, tid = tid, isRefresh = true, fromApi = true) {
+        getAkVideo(sid = sid, bid = bid, tid = tid, isRefresh = true) {
             isRefreshing = false
             onComplete()
         }
@@ -272,17 +277,17 @@ class AkViewModel @Inject constructor(
     val akNotes = _akNotes.asStateFlow()
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getAkNotes(sid: Int, tid: Int, bid: Int,isRefresh: Boolean = false,
-                   fromApi: Boolean = false,
-                   onComplete: (() -> Unit)? = null,) {
+    fun getAkNotes(
+        sid: Int, tid: Int, bid: Int, isRefresh: Boolean = false,
+        onComplete: (() -> Unit)? = null,
+    ) {
         viewModelScope.launch {
             try {
-                if (!isRefresh){
+                if (!isRefresh) {
                     _akNotes.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getAkNotesFromApi(sid = sid, bid = bid, tid = tid)
-                else repository.getAkNotes(sid = sid, bid = bid, tid = tid)
-                val decodedData: ByteArray = Base64.getDecoder().decode(response.response)
+                val response = repository.getAkNotes(sid = sid, bid = bid, tid = tid)
+                val decodedData: ByteArray = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: AkNotes =
                     gson.fromJson(decryptedData, AkNotes::class.java)
@@ -294,7 +299,7 @@ class AkViewModel @Inject constructor(
             } catch (e: Exception) {
                 _akNotes.value = Response.Error(e.localizedMessage ?: "An error occurred.")
             } finally {
-                if (isRefresh){
+                if (isRefresh) {
                     isRefreshing = false
                 }
                 onComplete?.invoke()
@@ -308,9 +313,9 @@ class AkViewModel @Inject constructor(
         sid: Int,
         tid: Int,
         onComplete: () -> Unit
-    ){
+    ) {
         isRefreshing = true
-        getAkNotes(sid = sid, bid = bid, tid = tid, isRefresh = true, fromApi = true) {
+        getAkNotes(sid = sid, bid = bid, tid = tid, isRefresh = true) {
             isRefreshing = false
             onComplete()
         }
@@ -454,7 +459,6 @@ class AkViewModel @Inject constructor(
     fun findPlayBackSpeed(): Float {
         return playerr?.playbackParameters?.speed ?: 1.0f
     }
-
 
 
     override fun onCleared() {

@@ -35,12 +35,16 @@ fun DppScreenOld(
     onPdfViewClicked: (String, String) -> Unit,
     onPdfDownloadClicked: (String?, String?) -> Unit,
 ) {
-    LaunchedEffect(key1 = Unit) {
-        vm.getAllDppOld(slug)
-    }
 
     val state by vm.dppOld.collectAsState()
     val dppResult = state
+
+    LaunchedEffect(key1 = Unit) {
+        if(dppResult !is Response.Success){
+            vm.getAllDppOld(slug)
+        }
+    }
+
 
     var searchText by rememberSaveable {
         mutableStateOf("")
@@ -96,12 +100,12 @@ fun DppScreenOld(
                                 EachCardForNotes(title = it.topic,
                                     onViewPdfClicked = {
                                         onPdfViewClicked(
-                                            it.baseUrl + it.attachmentKey,
+                                            it.attachment_base_url + it.attachment_key,
                                             it.topic ?: ""
                                         )
                                     }) {
                                     onPdfDownloadClicked(
-                                        it.baseUrl + it.attachmentKey,
+                                        it.attachment_base_url + it.attachment_key,
                                         it.topic ?: ""
                                     )
                                 }

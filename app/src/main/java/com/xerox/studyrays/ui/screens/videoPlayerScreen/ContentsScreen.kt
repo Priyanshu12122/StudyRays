@@ -13,8 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.ChatBubbleOutline
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.outlined.WatchLater
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +44,7 @@ import com.xerox.studyrays.network.ResponseTwo
 import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.screens.videoPlayerScreen.subscreens.CommentsScreen
 import com.xerox.studyrays.ui.screens.videoPlayerScreen.subscreens.NotesScreen
+import com.xerox.studyrays.ui.screens.videoPlayerScreen.subscreens.TelegramScreen
 import com.xerox.studyrays.ui.screens.videoPlayerScreen.subscreens.TimelineScreen
 import com.xerox.studyrays.utils.Constants
 import com.xerox.studyrays.utils.IconItem
@@ -70,14 +71,14 @@ fun ContentsScreen(
     embedCode: String,
     isWhat: String,
     topicSlug: String,
-    position: Long,
+    isOld: Boolean,
     onTaskUrlChanged: (String) -> Unit,
     onShortenedUrlChanged: (String) -> Unit,
     onDownloadUrlChanged: (String) -> Unit,
     onIsTaskOpenChanged: (Boolean) -> Unit,
     onIsPlayerReadyChanged: (Boolean) -> Unit,
     onBottomSheetChanged: (Boolean) -> Unit,
-    onAddNoteClicked: () -> Unit,
+//    onAddNoteClicked: () -> Unit,
     onNoteClick: (Long) -> Unit,
     onSlideClicked: (Long) -> Unit,
 ) {
@@ -94,39 +95,31 @@ fun ContentsScreen(
     var baseLink by rememberSaveable { mutableStateOf("") }
     var telegramUrl by rememberSaveable { mutableStateOf("") }
 
-//    var currentScreen: ScreenType by remember { mutableStateOf(ScreenType.CommentsScreen) }
 
-    val icons =
+    val icons = if (!isOld) {
+
         ImmutableIcons(
             icons = listOf(
                 IconItem(
                     icon = Icons.Default.ChatBubbleOutline, content = {
                         CommentsScreen(externalId = id, topicSlug = topicSlug)
                     },
-                    isImageVector = true,
-                    painter = R.drawable.bubble_chat
+                    isImageVector = false,
+                    painter = R.drawable.comment
                 ),
 
-                IconItem(
-                    icon = Icons.Default.Menu, content = {
-                        Text(text = "This is the menu screen")
-                    },
-                    isImageVector = true,
-                    painter = R.drawable.menu
-                ),
 
                 IconItem(
                     icon = Icons.AutoMirrored.Filled.NoteAdd, content = {
                         NotesScreen(
-                            position = position,
                             videoId = videoId,
                             onNoteClick = {
                                 onNoteClick(it)
                             }
                         )
                     },
-                    isImageVector = true,
-                    painter = R.drawable.staroutlined
+                    isImageVector = false,
+                    painter = R.drawable.notes
                 ),
 
                 IconItem(
@@ -142,15 +135,81 @@ fun ContentsScreen(
                 ),
 
                 IconItem(
-                    icon = Icons.Default.Star, content = {
-                        Text(text = "This is the star screen")
+                    icon = if (isWatchLaterSaved) Icons.Default.Star else Icons.Default.StarBorder,
+                    content = {
+//                        Text(text = "This is the star screen")
+                    },
+                    isImageVector = true,
+                    painter = if (isWatchLaterSaved) R.drawable.starfilled else R.drawable.staroutlined
+                ),
+
+                IconItem(
+                    icon = Icons.Default.StarBorder,
+                    content = {
+                        TelegramScreen {
+                            if (telegramUrl != "") {
+                                mainViewModel.openTelegram(context, telegramUrl)
+                            } else {
+                                mainViewModel.showToast(
+                                    context,
+                                    "Some Error ocurred, Please try reloading the page.."
+                                )
+                            }
+                        }
+
                     },
                     isImageVector = false,
-                    painter = if (isWatchLaterSaved) R.drawable.starfilled else R.drawable.staroutlined
+                    painter = R.drawable.telegram
                 )
 
             )
         )
+    } else {
+        ImmutableIcons(
+            icons = listOf(
+                IconItem(
+                    icon = Icons.AutoMirrored.Filled.NoteAdd, content = {
+                        NotesScreen(
+                            videoId = videoId,
+                            onNoteClick = {
+                                onNoteClick(it)
+                            }
+                        )
+                    },
+                    isImageVector = true,
+                    painter = R.drawable.staroutlined
+                ),
+                IconItem(
+                    icon = Icons.Default.Star, content = {
+//                        Text(text = "This is the star screen")
+                    },
+                    isImageVector = false,
+                    painter = if (isWatchLaterSaved) R.drawable.starfilled else R.drawable.staroutlined
+                ),
+
+                IconItem(
+                    icon = Icons.Default.StarBorder,
+                    content = {
+                        TelegramScreen {
+                            if (telegramUrl != "") {
+                                mainViewModel.openTelegram(context, telegramUrl)
+                            } else {
+                                mainViewModel.showToast(
+                                    context,
+                                    "Some Error occurred, Please try reloading the page.."
+                                )
+                            }
+                        }
+
+                    },
+                    isImageVector = false,
+                    painter = R.drawable.telegram
+                )
+            )
+
+
+        )
+    }
 
 
 
@@ -268,156 +327,171 @@ fun ContentsScreen(
 //                            )
 //                        })
 //
-                    when (val navResult = navBar) {
-                        is ResponseTwo.Error -> {}
-                        is ResponseTwo.Loading -> {}
-                        is ResponseTwo.Nothing -> {}
-                        is ResponseTwo.Success -> {
-                            telegramUrl = navResult.data.telegram
-                        }
+                when (val navResult = navBar) {
+                    is ResponseTwo.Error -> {}
+                    is ResponseTwo.Loading -> {}
+                    is ResponseTwo.Nothing -> {}
+                    is ResponseTwo.Success -> {
+                        telegramUrl = navResult.data.telegram
+                    }
+                }
+
+
+
+                when (downloadResultState) {
+                    is Response.Error -> {
+                        Log.d(
+                            "TAG",
+                            "VideoPlayerScreen: Error in down load error = ${downloadResultState.msg}"
+                        )
                     }
 
+                    is Response.Loading -> {}
+                    is Response.Success -> {
+
+                        baseLink = if (downloadResultState.data.stream_type == "mpd_url") {
+                            downloadResultState.data.mpd_url
+                        } else {
+                            downloadResultState.data.master_url
+                        }
+                        val licenseUrl = baseLink + url
+
+                        baseLink += /*downloadResultState.data.master_url*/ url
+
+                        LaunchedEffect(key1 = Unit) {
+                            if (downloadResultState.data.stream_type == "mpd_url") {
+                                vm.initialiseDrmPlayer(
+                                    context = context,
+                                    url = url,
+                                    licenseUrl = licenseUrl,
+                                    videoId = videoId,
+                                )
+                                Log.d("TAG", "ContentsScreen: Mpd url hai")
+                                Log.d("TAG", "url = $url")
+                            } else {
+                                vm.initialisePlayer(
+                                    context = context,
+                                    url = baseLink,
+                                    videoId = videoId,
+                                )
+
+                                Log.d("TAG", "ContentsScreen: M3u8 url hai")
+                                Log.d("TAG", "baselink = $baseLink")
 
 
-                    when (downloadResultState) {
-                        is Response.Error -> {
-                            Log.d(
-                                "TAG",
-                                "VideoPlayerScreen: Error in down load error = ${downloadResultState.msg}"
-                            )
+                            }
+                            onIsPlayerReadyChanged(true)
                         }
 
-                        is Response.Loading -> {}
-                        is Response.Success -> {
+                        if (downloadResultState.data.visible == "1") {
+                            TextWithIcon(
+                                onClick = {
+                                    scope.launch {
+                                        val task = vm.getTask(1)
+                                        val alarmItem = vm.getAlarmById(1)
+                                        val ip =
+                                            withContext(Dispatchers.IO) { vm.getIPAddress(true) }
 
-                            baseLink = if (downloadResultState.data.stream_type == "mpd_url") {
-                                downloadResultState.data.mpd_url
-                            } else {
-                                downloadResultState.data.master_url
-                            }
-                            val licenseUrl = baseLink + url
+                                        if (ip == null || task == null) {
+                                            onTaskUrlChanged(downloadResultState.data.task_url)
+                                            onShortenedUrlChanged(downloadResultState.data.task_final_url)
+                                            onIsTaskOpenChanged(true)
+                                        } else if (task.ipAddress != ip) {
+                                            onTaskUrlChanged(downloadResultState.data.task_url)
+                                            onShortenedUrlChanged(downloadResultState.data.task_final_url)
+                                            onIsTaskOpenChanged(true)
+                                        } else {
+                                            onDownloadUrlChanged(downloadResultState.data.download_url)
+                                            val downloadNumber = vm.getDownloadNumberById(1)
 
-                            baseLink += /*downloadResultState.data.master_url*/ url
-
-                            LaunchedEffect(key1 = Unit) {
-                                if (downloadResultState.data.stream_type == "mpd_url") {
-                                    vm.initialiseDrmPlayer(
-                                        context = context,
-                                        url = url,
-                                        licenseUrl = licenseUrl,
-                                        videoId = videoId,
-                                        position = position ?: 0L
-                                    )
-                                } else {
-                                    vm.initialisePlayer(
-                                        context = context,
-                                        url = baseLink,
-                                        videoId = videoId,
-                                        position = position ?: 0L
-                                    )
-
-                                }
-                                onIsPlayerReadyChanged(true)
-                            }
-
-                            if (downloadResultState.data.visible == "1") {
-                                TextWithIcon(
-                                    onClick = {
-                                        scope.launch {
-                                            val task = vm.getTask(1)
-                                            val alarmItem = vm.getAlarmById(1)
-                                            val ip =
-                                                withContext(Dispatchers.IO) { vm.getIPAddress(true) }
-
-                                            if (ip == null || task == null) {
-                                                onTaskUrlChanged(downloadResultState.data.task_url)
-                                                onShortenedUrlChanged(downloadResultState.data.task_final_url)
-                                                onIsTaskOpenChanged(true)
-                                            } else if (task.ipAddress != ip) {
-                                                onTaskUrlChanged(downloadResultState.data.task_url)
-                                                onShortenedUrlChanged(downloadResultState.data.task_final_url)
-                                                onIsTaskOpenChanged(true)
-                                            } else {
-                                                onDownloadUrlChanged(downloadResultState.data.download_url)
-                                                val downloadNumber = vm.getDownloadNumberById(1)
-
-                                                when {
-                                                    downloadNumber == null -> {
-                                                        vm.insertDownloadNumber(
-                                                            DownloadNumberEntity(
-                                                                id = 1,
-                                                                numberOfDownloads = 1
-                                                            )
+                                            when {
+                                                downloadNumber == null -> {
+                                                    vm.insertDownloadNumber(
+                                                        DownloadNumberEntity(
+                                                            id = 1,
+                                                            numberOfDownloads = 1
                                                         )
-                                                        onBottomSheetChanged(true)
-                                                    }
+                                                    )
+                                                    onBottomSheetChanged(true)
+                                                }
 
-                                                    downloadNumber.numberOfDownloads < downloadResultState.data.download_limit.toInt() -> {
-                                                        vm.insertDownloadNumber(
-                                                            DownloadNumberEntity(
-                                                                id = 1,
-                                                                numberOfDownloads = downloadNumber.numberOfDownloads + 1
-                                                            )
+                                                downloadNumber.numberOfDownloads < downloadResultState.data.download_limit.toInt() -> {
+                                                    vm.insertDownloadNumber(
+                                                        DownloadNumberEntity(
+                                                            id = 1,
+                                                            numberOfDownloads = downloadNumber.numberOfDownloads + 1
                                                         )
-                                                        onBottomSheetChanged(true)
-                                                    }
+                                                    )
+                                                    onBottomSheetChanged(true)
+                                                }
 
-                                                    alarmItem != null && alarmItem.timeToTriggerAt > System.currentTimeMillis() -> {
-                                                        mainViewModel.showToast(
-                                                            context,
-                                                            "You have reached today's download limit, you can download again after ${alarmItem.timeToTriggerAt.toReadableDate()}"
-                                                        )
-                                                    }
+                                                alarmItem != null && alarmItem.timeToTriggerAt > System.currentTimeMillis() -> {
+                                                    mainViewModel.showToast(
+                                                        context,
+                                                        "You have reached today's download limit, you can download again after ${alarmItem.timeToTriggerAt.toReadableDate()}"
+                                                    )
+                                                }
 
-                                                    else -> {
-                                                        if (alarmItem != null) {
-                                                            vm.deleteAlarmItem(alarmItem)
-                                                        }
-                                                        vm.deleteDownloadNumber(downloadNumber)
-                                                        vm.deleteTask(task)
-                                                        onIsTaskOpenChanged(true)
+                                                else -> {
+                                                    if (alarmItem != null) {
+                                                        vm.deleteAlarmItem(alarmItem)
                                                     }
+                                                    vm.deleteDownloadNumber(downloadNumber)
+                                                    vm.deleteTask(task)
+                                                    onIsTaskOpenChanged(true)
                                                 }
                                             }
                                         }
-                                    },
-                                    text = "Download",
-                                    icon = {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.baseline_download_24),
-                                            contentDescription = "",
-                                            modifier = Modifier.size(90.dp)
-                                        )
                                     }
-                                )
-                            }
+                                },
+                                text = "Download",
+                                icon = {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.baseline_download_24),
+                                        contentDescription = "",
+                                        modifier = Modifier.size(90.dp)
+                                    )
+                                }
+                            )
                         }
                     }
                 }
             }
+        }
 //        }
 
         SelectableIconRow(
             icons = icons,
+            isOld = isOld,
+            onTelegramClick = {
+                if (telegramUrl != "") {
+                    mainViewModel.openTelegram(context, telegramUrl)
+                } else {
+                    mainViewModel.showToast(
+                        context,
+                        "Some Error ocurred, Please try reloading the page.."
+                    )
+                }
+            },
             onStarClick = {
 
                 mainViewModel.onStarClick(
-                            WatchLaterEntity(
-                                imageUrl = imageUrl,
-                                title = title,
-                                dateCreated = createdAt,
-                                duration = duration,
-                                videoId = videoId,
-                                videoUrl = url,
-                                externalId = id,
-                                embedCode = embedCode,
-                                time = System.currentTimeMillis(),
-                                isAk = false,
-                                isKhazana = isWhat == Constants.KHAZANA,
-                                isPw = isWhat == Constants.PW
-                            ),
-                            context = context
-                        )
+                    WatchLaterEntity(
+                        imageUrl = imageUrl,
+                        title = title,
+                        dateCreated = createdAt,
+                        duration = duration,
+                        videoId = videoId,
+                        videoUrl = url,
+                        externalId = id,
+                        embedCode = embedCode,
+                        time = System.currentTimeMillis(),
+                        isKhazana = isWhat == Constants.KHAZANA,
+                        isPw = isWhat == Constants.PW,
+                        isOld = isOld
+                    ),
+                    context = context
+                )
 
             }
         )

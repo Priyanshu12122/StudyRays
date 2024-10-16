@@ -79,27 +79,41 @@ fun SearchSection(
                             item = searchItem,
                             isSaved = isSaved,
                             onFavouriteIconClicked = { value ->
-                                vm.onFavoriteClick(FavouriteCourse(externalId = value))
+                                vm.onFavoriteClick(
+                                    FavouriteCourse(
+                                        externalId = value,
+                                        name = searchItem.batch_name,
+                                        byName = searchItem.batch_name,
+                                        language = "",
+                                        imageUrl = "",
+                                        slug = searchItem.batch_slug,
+                                        classValue = searchItem.`class`,
+                                        isOld = false
+                                    )
+                                )
                                 savedStatusMap[searchItem.batch_id] = !isSaved
                                 vm.showToast(
                                     context,
-                                    if (!isSaved) "${searchItem.batch_name} added to favourites list" else "${searchItem.batch_name} removed from favourites list"
+                                    if (!isSaved) "${searchItem.batch_name} added to favourites list"
+                                    else "${searchItem.batch_name} removed from favourites list"
                                 )
                             },
                             checkIfSaved = {
                                 scope.launch {
                                     val saved =
-                                        vm.checkIfItemIsPresentInDb(FavouriteCourse(it))
+                                        vm.checkIfItemIsPresentInDb(it)
                                     savedStatusMap[searchItem.batch_id] = saved
                                 }
-                            }) {
-                            onBatchClick(
-                                searchItem.batch_id,
-                                searchItem.batch_name,
-                                searchItem.`class`,
-                                searchItem.batch_slug
-                            )
-                        }
+                            },
+                            onItemClicked = {
+                                onBatchClick(
+                                    searchItem.batch_id,
+                                    searchItem.batch_name,
+                                    searchItem.`class`,
+                                    searchItem.batch_slug
+                                )
+                            }
+                        )
                     }
                 }
             }

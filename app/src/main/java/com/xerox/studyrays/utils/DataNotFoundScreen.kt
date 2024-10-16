@@ -20,10 +20,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,6 +53,7 @@ fun DataNotFoundScreen(
     paddingValues: PaddingValues = PaddingValues(0.dp,0.dp),
     errorMsg: String? = "",
     state: MessageBarState,
+    color: Color = MaterialTheme.colorScheme.background,
     shouldShowBackButton: Boolean,
     onRetryClicked: () -> Unit,
     onBackClicked: () -> Unit,
@@ -57,7 +61,10 @@ fun DataNotFoundScreen(
     Scaffold(
         topBar = {
             if (shouldShowBackButton) {
-                TopAppBar(title = {}, navigationIcon = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = color),
+                    title = {},
+                    navigationIcon = {
                     IconButton(onClick = {
                         onBackClicked()
                     }) {
@@ -69,68 +76,71 @@ fun DataNotFoundScreen(
 
         }
     ) {
+        Surface(color = color) {
 
-        ContentWithMessageBar(
-            messageBarState = state,
-            modifier = Modifier
+            ContentWithMessageBar(
+                messageBarState = state,
+                modifier = Modifier
 //                .padding(it)
-                .padding(paddingValues),
-            errorMaxLines = 2,
-            showCopyButton = false
-        ) {
+                    .padding(paddingValues),
+                errorMaxLines = 2,
+                showCopyButton = false
+            ) {
 
-            if (errorMsg == vm.nullErrorMsg){
-                NoFilesFoundScreen()
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-
-                    state.addError(Exception(errorMsg))
-
-                    val composition by rememberLottieComposition(
-                        spec = LottieCompositionSpec.RawRes(
-                            if (errorMsg != vm.noInternetMsg) R.raw.datanotfound else R.raw.nointernet
-                        )
-                    )
-
-                    LottieAnimation(
-                        composition = composition,
-                        iterations = LottieConstants.IterateForever,
+                if (errorMsg == vm.nullErrorMsg){
+                    NoFilesFoundScreen()
+                } else {
+                    Column(
                         modifier = Modifier
-                            .size(250.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Data not found",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedButton(
-                        onClick = {
-                            onRetryClicked()
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(
-                            1.dp,
-                            color = if (isSystemInDarkTheme()) Color.White else Color.Black
-                        ),
-                        modifier = Modifier
-                            .padding(horizontal = 10.dp, vertical = 0.dp)
-                            .fillMaxWidth()
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "RETRY")
-                    }
-                }
 
+                        state.addError(Exception(errorMsg))
+
+                        val composition by rememberLottieComposition(
+                            spec = LottieCompositionSpec.RawRes(
+                                if (errorMsg != vm.noInternetMsg) R.raw.datanotfound else R.raw.nointernet
+                            )
+                        )
+
+                        LottieAnimation(
+                            composition = composition,
+                            iterations = LottieConstants.IterateForever,
+                            modifier = Modifier
+                                .size(250.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Data not found",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = {
+                                onRetryClicked()
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(
+                                1.dp,
+                                color = if (isSystemInDarkTheme()) Color.White else Color.Black
+                            ),
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp, vertical = 0.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Text(text = "RETRY")
+                        }
+                    }
+
+                }
             }
         }
+
     }
 }

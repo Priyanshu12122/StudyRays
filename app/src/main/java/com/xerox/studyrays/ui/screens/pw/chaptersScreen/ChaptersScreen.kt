@@ -2,7 +2,9 @@ package com.xerox.studyrays.ui.screens.pw.chaptersScreen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,15 +40,27 @@ fun ChaptersScreen(
     subjectSlug: String,
     subject: String,
     onBackClicked: () -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
     onClick: (String, String) -> Unit,
 ) {
 
-    LaunchedEffect(key1 = Unit) {
-        vm.getAllLessons(batchId = batchId, subjectSlug = subjectSlug)
-    }
-
     val state by vm.lessons.collectAsState()
     val result = state
+
+    LaunchedEffect(key1 = Unit) {
+        if (result !is Response.Success) {
+            vm.getAllLessons(batchId = batchId, subjectSlug = subjectSlug)
+        }
+
+        vm.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
+            }
+        )
+
+    }
+
+
     val snackbarHostState = remember { SnackbarHostState() }
 
 
@@ -60,7 +74,11 @@ fun ChaptersScreen(
         },
         topBar = {
             TopAppBar(
-                title = { Text(text = subject) },
+                title = {
+                    Text(
+                        text = subject
+                    )
+                },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = {
@@ -92,7 +110,20 @@ fun ChaptersScreen(
             }
 
             is Response.Loading -> {
-                LoadingScreen(paddingValues = paddingValues)
+
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+                    LazyColumn {
+                        items(10) {
+                            EachCardForChapterLoading()
+                        }
+                    }
+                }
+
+
             }
 
             is Response.Success -> {

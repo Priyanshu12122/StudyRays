@@ -2,10 +2,10 @@ package com.xerox.studyrays.utils
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
@@ -44,10 +44,10 @@ fun <T> PullToRefreshLazyColumn(
                 .fillMaxSize(),
         ) {
 
-                if (item != null) {
-                    item {
-                        item()
-                    }
+            if (item != null) {
+                item {
+                    item()
+                }
             }
             items(items) {
 
@@ -55,14 +55,75 @@ fun <T> PullToRefreshLazyColumn(
             }
         }
 
-        if(pullToRefreshState.isRefreshing) {
+        if (pullToRefreshState.isRefreshing) {
             LaunchedEffect(true) {
                 onRefresh()
             }
         }
 
         LaunchedEffect(isRefreshing) {
-            if(isRefreshing) {
+            if (isRefreshing) {
+                pullToRefreshState.startRefresh()
+            } else {
+                pullToRefreshState.endRefresh()
+            }
+        }
+
+        PullToRefreshContainer(
+            state = pullToRefreshState,
+            modifier = Modifier
+                .align(Alignment.TopCenter),
+            containerColor = if (!isRefreshing) Color.Transparent else PullToRefreshDefaults.containerColor
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun <T> PullToRefreshLazyColumnForLecturesScreen(
+    items: List<T>,
+    content: @Composable (Int, T) -> Unit,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    item: @Composable () -> Unit,
+    item2: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    pullToRefreshState: PullToRefreshState = rememberPullToRefreshState(),
+    lazyListState: LazyListState = rememberLazyListState()
+) {
+//    val pullToRefreshState = rememberPullToRefreshState()
+    Box(
+        modifier = modifier
+            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+    ) {
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier
+                .fillMaxSize(),
+        ) {
+
+            item {
+                item()
+            }
+            itemsIndexed(items) { index, item ->
+
+                content(index, item)
+            }
+
+            item {
+                item2()
+            }
+
+        }
+
+        if (pullToRefreshState.isRefreshing) {
+            LaunchedEffect(true) {
+                onRefresh()
+            }
+        }
+
+        LaunchedEffect(isRefreshing) {
+            if (isRefreshing) {
                 pullToRefreshState.startRefresh()
             } else {
                 pullToRefreshState.endRefresh()
@@ -113,14 +174,14 @@ fun <T> PullToRefreshLazyColumn2(
             }
         }
 
-        if(pullToRefreshState.isRefreshing) {
+        if (pullToRefreshState.isRefreshing) {
             LaunchedEffect(true) {
                 onRefresh()
             }
         }
 
         LaunchedEffect(isRefreshing) {
-            if(isRefreshing) {
+            if (isRefreshing) {
                 pullToRefreshState.startRefresh()
             } else {
                 pullToRefreshState.endRefresh()

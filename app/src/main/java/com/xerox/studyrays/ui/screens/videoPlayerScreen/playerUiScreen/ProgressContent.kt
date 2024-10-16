@@ -52,14 +52,14 @@ fun ProgressContent(
         horizontalArrangement = Arrangement.Center,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp)
+            .padding(start = 8.dp)
     ) {
         Text(
             text = formattedCurrentVideoTime,
             color = Color.White,
             fontSize = 14.sp,
         )
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(6.dp))
         Box(modifier = Modifier.weight(8.5f)) {
             Slider(
                 value = currentBufferedPercentage.toFloat(),
@@ -100,7 +100,7 @@ fun ProgressContent(
             fontSize = 14.sp,
         )
         Spacer(Modifier.width(1.dp))
-        CustomIconButton(
+        CustomIconButton2(
             iconResId = if (isLandscapeMode) R.drawable.round_fullscreen_exit_24 else R.drawable.round_fullscreen_24,
             onClick = {
                 onPlayerAction.invoke(PlayerAction.ChangeIsLandscapeMode(!isLandscapeMode))

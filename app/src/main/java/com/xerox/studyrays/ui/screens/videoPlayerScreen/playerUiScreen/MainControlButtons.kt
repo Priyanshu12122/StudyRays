@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.xerox.studyrays.R
+import com.xerox.studyrays.utils.SpacerWidth
 
 @Composable
 fun MainControlButtons(
@@ -19,6 +20,9 @@ fun MainControlButtons(
     onPlayerAction: (PlayerAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+
+    val padding = 20.dp
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -27,13 +31,15 @@ fun MainControlButtons(
             .padding(12.dp)
     ) {
         CustomIconButton(
-            iconResId = R.drawable.baseline_replay_5_24,
+            iconResId = R.drawable.back,
             enabled = isSeekBackButtonAvailable,
             onClick = {
                 onPlayerAction.invoke(PlayerAction.SeekBack)
             },
             bigIcon = true
         )
+
+        SpacerWidth(dp = padding)
 //        CustomIconButton(
 //            iconResId = R.drawable.ic_exo_icon_rewind,
 //            onClick = {
@@ -42,11 +48,11 @@ fun MainControlButtons(
 //        )
 
         val centerIcon = if (playbackState == PlaybackState.Ended) {
-            R.drawable.baseline_replay_circle_filled_24
+            R.drawable.baseline_replay_24
         } else if (isPlaying) {
-            R.drawable.baseline_pause_circle_24
+            R.drawable.baseline_pause_24
         } else {
-            R.drawable.baseline_play_circle_24
+            R.drawable.baseline_play_arrow_24
         }
         CustomIconButton(
             iconResId = centerIcon,
@@ -64,8 +70,10 @@ fun MainControlButtons(
 //            }
 //        )
 
+        SpacerWidth(dp = padding)
+
         CustomIconButton(
-            iconResId = R.drawable.round_forward_10_24,
+            iconResId = R.drawable.next,
             enabled = isSeekForwardButtonAvailable,
             onClick = {
                 onPlayerAction.invoke(PlayerAction.SeekForward)

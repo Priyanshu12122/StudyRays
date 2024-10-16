@@ -2,6 +2,7 @@ package com.xerox.studyrays.ui.screens.keyGeneratorScreen
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.util.Log
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -38,21 +39,23 @@ fun WebViewScreen(
     onBackClick: () -> Unit,
 ) {
 
+//    val taskkUrl = "https://sharedisklinks.com/nQJrquR"
     var isLoading by rememberSaveable { mutableStateOf(false) }
     var progress by rememberSaveable { mutableIntStateOf(0) }
     var backEnabled by rememberSaveable { mutableStateOf(false) }
-    var webView by remember {
-        mutableStateOf<WebView?>(null)
-    }
+    var webView by remember { mutableStateOf<WebView?>(null) }
 
     Scaffold(
 
         topBar = {
-            LinearProgressIndicator(
-                progress = { progress / 100f },
-                modifier = modifier.fillMaxWidth(),
-                color = MainPurple
-            )
+
+            if (isLoading) {
+                LinearProgressIndicator(
+                    progress = { progress / 100f },
+                    modifier = modifier.fillMaxWidth(),
+                    color = MainPurple
+                )
+            }
         }
 
     ) {
@@ -62,18 +65,6 @@ fun WebViewScreen(
                 .fillMaxSize()
         ) {
 
-//        if (isLoading){
-//            Dialog(onDismissRequest = {`1
-//
-//            }) {
-//                CircularProgressIndicator(
-////                progress = { (progress/100).toFloat() },
-//                    modifier = modifier
-//                        .size(60.dp)
-//                        .align(Alignment.Center)
-//                )
-//            }
-//        }
             AndroidView(
                 factory = { context ->
                     WebView(context).apply {
@@ -98,6 +89,7 @@ fun WebViewScreen(
                             ): Boolean {
                                 request?.url?.let { url ->
                                     if (url.toString().contains(shortenedUrl, true)) {
+                                        Log.d("TAG", "contains = $url")
                                         vm.insertKey(
                                             KeyEntity(
                                                 id = 1,
@@ -107,12 +99,9 @@ fun WebViewScreen(
                                         )
                                         onCompleted()
                                         return true
-                                    } else {
-                                        return false
-//                                view?.loadUrl(url.toString())
                                     }
                                 }
-                                return super.shouldOverrideUrlLoading(view, request)
+                                return false
                             }
                         }
 
@@ -121,7 +110,7 @@ fun WebViewScreen(
                             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                                 super.onProgressChanged(view, newProgress)
                                 progress = newProgress
-//                            isLoading = newProgress != 20
+                                isLoading = newProgress != 100
                             }
                         }
 

@@ -61,11 +61,22 @@ fun AkVideosAndNotes(
     bid: Int,
     onClick: (String, Int, Int, Int, Int, String, String) -> Unit,
     onPdfViewClicked: (String, String) -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
     onBackClick: () -> Unit,
 ) {
 
+    val videoState by vm.akVideo.collectAsState()
+    val result = videoState
+
     LaunchedEffect(key1 = Unit) {
-        vm.getAkVideo(sid = sid, bid = bid, tid = tid)
+        if (result !is Response.Success) {
+            vm.getAkVideo(sid = sid, bid = bid, tid = tid)
+        }
+        mainViewModel.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
+            }
+        )
 
     }
 
@@ -73,7 +84,6 @@ fun AkVideosAndNotes(
     val permissionState =
         rememberPermissionState(permission = Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
-    val videoState by vm.akVideo.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val tabRowList = listOf(
         "Videos",
@@ -113,7 +123,7 @@ fun AkVideosAndNotes(
         }
     ) { paddingValues ->
 
-        when (val result = videoState) {
+        when (result) {
             is Response.Error -> {
 
                 DataNotFoundScreen(
@@ -152,7 +162,9 @@ fun AkVideosAndNotes(
                         when (page) {
                             0 -> {
 
-                                if (result.data.data.class_list.classes.isEmpty()) {
+                                val list = remember { result.data.data.class_list.classes }
+
+                                if (list.isEmpty()) {
                                     NoFilesFoundScreen()
                                 } else {
 
@@ -195,7 +207,7 @@ fun AkVideosAndNotes(
 //                                    }
 
                                     PullToRefreshLazyColumn(
-                                        items = result.data.data.class_list.classes,
+                                        items = list,
                                         content = {
 
                                             EachCardForVideo2(

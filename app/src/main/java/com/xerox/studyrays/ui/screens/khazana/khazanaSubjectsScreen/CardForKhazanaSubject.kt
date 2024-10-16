@@ -3,7 +3,6 @@ package com.xerox.studyrays.ui.screens.khazana.khazanaSubjectsScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,23 +50,19 @@ fun CardForKhazanaSubject(
             .shadow(
                 elevation = 20.dp,
                 shape = RoundedCornerShape(10.dp),
-                ambientColor = if (!isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+                ambientColor = Color.LightGray
             )
             .clip(RoundedCornerShape(10.dp))
-            .background(if (!isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background)
             .clickable {
                 onClick()
             }
             .then(
-                if (isSystemInDarkTheme()) {
-                    Modifier.border(
-                        1.dp,
-                        Color.White.copy(0.6f),
-                        RoundedCornerShape(10.dp)
-                    )
-                } else {
-                    Modifier
-                }
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
             )
     ) {
         Row(
@@ -180,20 +175,17 @@ fun CardForTeacherInKhazanaChapter(
             .shadow(
                 elevation = 20.dp,
                 shape = RoundedCornerShape(10.dp),
-                ambientColor = if (!isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+                ambientColor = Color.LightGray
             )
             .clip(RoundedCornerShape(10.dp))
-            .background(if (!isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background)
             .then(
-                if (isSystemInDarkTheme()) {
-                    Modifier.border(
-                        1.dp,
-                        Color.White.copy(0.6f),
-                        RoundedCornerShape(10.dp)
-                    )
-                } else {
-                    Modifier
-                }
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
+
             )
     ) {
         Column(

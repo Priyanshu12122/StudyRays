@@ -11,9 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.xerox.studyrays.cacheDb.khazanaCache.khazanaDb.KhazanaEntity
-import com.xerox.studyrays.data.ApiRepository
+import com.xerox.studyrays.data.KhazanaRepository
 import com.xerox.studyrays.db.khazanaFavDb.KhazanaFav
+import com.xerox.studyrays.model.khazanaModel.khazana.KhazanaItem
 import com.xerox.studyrays.model.khazanaModel.khazanaChapters.KhazanaChaptersItem
 import com.xerox.studyrays.model.khazanaModel.khazanaLectures.dpp.KhazanaDpp
 import com.xerox.studyrays.model.khazanaModel.khazanaLectures.notes.KhazanaNotesItem
@@ -41,7 +41,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class KhazanaViewModel @Inject constructor(
-    private val repository: ApiRepository,
+    private val repository: KhazanaRepository,
 ) : ViewModel() {
 
     private val key = MainViewModel.Keys.kkk()
@@ -55,7 +55,7 @@ class KhazanaViewModel @Inject constructor(
     val refreshMsg = "Refreshed Successfully!"
 
 
-    private val _khazana: MutableStateFlow<ResponseTwo<List<KhazanaEntity>>> =
+    private val _khazana: MutableStateFlow<ResponseTwo<List<KhazanaItem>>> =
         MutableStateFlow(ResponseTwo.Loading())
     val khazana = _khazana.asStateFlow()
 
@@ -63,7 +63,6 @@ class KhazanaViewModel @Inject constructor(
 
     fun getKhazana(
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -71,8 +70,7 @@ class KhazanaViewModel @Inject constructor(
                 if (!isRefresh) {
                     _khazana.value = ResponseTwo.Loading()
                 }
-                val response =
-                    if (fromApi) repository.getKhazanaFromApi() else repository.getKhazana()
+                val response = repository.getKhazana()
                 _khazana.value = ResponseTwo.Success(response)
             } catch (e: SocketTimeoutException) {
                 _khazana.value =
@@ -92,10 +90,13 @@ class KhazanaViewModel @Inject constructor(
 
     fun refreshKhazana(onComplete: () -> Unit) {
         isRefreshing = true
-        getKhazana(isRefresh = true, fromApi = true, onComplete = {
-            isRefreshing = false
-            onComplete()
-        })
+        getKhazana(
+            isRefresh = true,
+            onComplete = {
+                isRefreshing = false
+                onComplete()
+            }
+        )
     }
 
 
@@ -110,7 +111,6 @@ class KhazanaViewModel @Inject constructor(
         topicId: String,
         topicName: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -118,24 +118,18 @@ class KhazanaViewModel @Inject constructor(
                 if (!isRefresh) {
                     _khazanaVideo.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getKhazanaVideosFromApi(
+                val response = repository.getKhazanaVideos(
                     subjectId = subjectId,
                     chapterId = chapterId,
                     topicId = topicId,
                     topicName = topicName
                 )
-                else repository.getKhazanaVideos(
-                    subjectId = subjectId,
-                    chapterId = chapterId,
-                    topicId = topicId,
-                    topicName = topicName
-                )
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<KhazanaVideoItem>? =
                     gson.fromJson(decryptedData, Array<KhazanaVideoItem>::class.java)?.toList()
 
-                if (data == null){
+                if (data == null) {
                     throw NullPointerException(nullErrorMsg)
                 } else {
                     _khazanaVideo.value = Response.Success(data)
@@ -171,7 +165,6 @@ class KhazanaViewModel @Inject constructor(
             topicId = topicId,
             topicName = topicName,
             isRefresh = true,
-            fromApi = true,
             onComplete = {
                 isRefreshing = false
                 onComplete()
@@ -191,7 +184,6 @@ class KhazanaViewModel @Inject constructor(
         topicId: String,
         topicName: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -199,15 +191,18 @@ class KhazanaViewModel @Inject constructor(
                 if (!isRefresh) {
                     _khazanaNotes.value = Response.Loading()
                 }
-                val response =
-                    if (fromApi) repository.getKhazanaNotesFromApi(subjectId = subjectId, chapterId = chapterId, topicId = topicId, topicName = topicName)
-                    else repository.getKhazanaNotes(subjectId = subjectId, chapterId = chapterId, topicId = topicId, topicName = topicName)
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val response = repository.getKhazanaNotes(
+                    subjectId = subjectId,
+                    chapterId = chapterId,
+                    topicId = topicId,
+                    topicName = topicName
+                )
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<KhazanaNotesItem>? =
                     gson.fromJson(decryptedData, Array<KhazanaNotesItem>::class.java)?.toList()
 
-                if (data == null){
+                if (data == null) {
                     throw NullPointerException(nullErrorMsg)
                 } else {
                     _khazanaNotes.value = Response.Success(data)
@@ -244,7 +239,6 @@ class KhazanaViewModel @Inject constructor(
             topicId = topicId,
             isRefresh = true,
             topicName = topicName,
-            fromApi = true,
             onComplete = {
                 isRefreshing = false
                 onComplete()
@@ -261,9 +255,8 @@ class KhazanaViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getKhazanaDpp(
-        subjectId: String, chapterId: String, topicId: String,topicName: String,
+        subjectId: String, chapterId: String, topicId: String, topicName: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -271,19 +264,24 @@ class KhazanaViewModel @Inject constructor(
                 if (!isRefresh) {
                     _khazanaDpp.value = Response.Loading()
                 }
-                val response =
-                    if (fromApi) repository.getKhazanaDppFromApi(subjectId, chapterId, topicId, topicName = topicName)
-                    else repository.getKhazanaDpp(subjectId, chapterId, topicId, topicName = topicName)
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val response = repository.getKhazanaDpp(
+                    subjectId,
+                    chapterId,
+                    topicId,
+                    topicName = topicName
+                )
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: KhazanaDpp? =
                     gson.fromJson(decryptedData, KhazanaDpp::class.java)
-                if (data == null){
+                if (data == null) {
                     throw NullPointerException(nullErrorMsg)
                 } else {
                     _khazanaDpp.value = Response.Success(data)
                 }
 
+            } catch (e: java.lang.IllegalStateException) {
+                _khazanaDpp.value = Response.Error("No files found..")
             } catch (e: SocketTimeoutException) {
                 _khazanaDpp.value =
                     Response.Error(socketErrorMsg)
@@ -315,7 +313,6 @@ class KhazanaViewModel @Inject constructor(
             chapterId = chapterId,
             topicId = topicId,
             isRefresh = true,
-            fromApi = true,
             topicName = topicName,
             onComplete = {
                 isRefreshing = false
@@ -333,9 +330,8 @@ class KhazanaViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun getKhazanaSolution(
-        subjectId: String, chapterId: String, topicId: String,topicName: String,
+        subjectId: String, chapterId: String, topicId: String, topicName: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -343,14 +339,17 @@ class KhazanaViewModel @Inject constructor(
                 if (!isRefresh) {
                     _khazanaSolutions.value = Response.Loading()
                 }
-                val response =
-                    if (fromApi) repository.getKhazanaSolutionFromApi(subjectId, chapterId, topicId,topicName = topicName)
-                    else repository.getKhazanaSolution(subjectId, chapterId, topicId,topicName = topicName)
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val response = repository.getKhazanaSolution(
+                    subjectId,
+                    chapterId,
+                    topicId,
+                    topicName = topicName
+                )
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: KhazanaSolution? =
                     gson.fromJson(decryptedData, KhazanaSolution::class.java)
-                if (data == null){
+                if (data == null) {
                     throw NullPointerException(nullErrorMsg)
                 } else {
                     _khazanaSolutions.value = Response.Success(data)
@@ -386,7 +385,6 @@ class KhazanaViewModel @Inject constructor(
             chapterId = chapterId,
             topicId = topicId,
             isRefresh = true,
-            fromApi = true,
             topicName = topicName,
             onComplete = {
                 isRefreshing = false
@@ -406,7 +404,6 @@ class KhazanaViewModel @Inject constructor(
     fun getKhazanaTeachers(
         id: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -414,13 +411,12 @@ class KhazanaViewModel @Inject constructor(
                 if (!isRefresh) {
                     _khazanaTeachers.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getKhazanaTeachersFromApi(id)
-                else repository.getKhazanaTeachers(id)
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val response = repository.getKhazanaTeachers(id)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<KhazanaTeacherItem>? =
                     gson.fromJson(decryptedData, Array<KhazanaTeacherItem>::class.java)?.toList()
-                if (data == null){
+                if (data == null) {
                     throw NullPointerException(nullErrorMsg)
                 } else {
                     _khazanaTeachers.value = Response.Success(data)
@@ -444,7 +440,7 @@ class KhazanaViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun refreshKhazanaTeachers(id: String, onComplete: () -> Unit) {
         isRefreshing = true
-        getKhazanaTeachers(id = id, isRefresh = true, fromApi = true, onComplete = {
+        getKhazanaTeachers(id = id, isRefresh = true, onComplete = {
             isRefreshing = false
             onComplete()
         })
@@ -536,7 +532,6 @@ class KhazanaViewModel @Inject constructor(
     fun getKhazanaSubjects(
         slug: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -544,13 +539,12 @@ class KhazanaViewModel @Inject constructor(
                 if (!isRefresh) {
                     _khazanaSubject.value = Response.Loading()
                 }
-                val response = if (fromApi) repository.getKhazanaSubjectsFromApi(slug)
-                else repository.getKhazanaSubjects(slug)
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val response = repository.getKhazanaSubjects(slug)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<KhazanaSubjectItem>? =
                     gson.fromJson(decryptedData, Array<KhazanaSubjectItem>::class.java)?.toList()
-                if (data == null){
+                if (data == null) {
                     throw NullPointerException(nullErrorMsg)
                 } else {
                     _khazanaSubject.value = Response.Success(data)
@@ -574,7 +568,7 @@ class KhazanaViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun refreshKhazanaSubjects(slug: String, onComplete: () -> Unit) {
         isRefreshing = true
-        getKhazanaSubjects(slug = slug, isRefresh = true, fromApi = true, onComplete = {
+        getKhazanaSubjects(slug = slug, isRefresh = true, onComplete = {
             isRefreshing = false
             onComplete()
         })
@@ -591,7 +585,6 @@ class KhazanaViewModel @Inject constructor(
         subjectId: String,
         chapterId: String,
         isRefresh: Boolean = false,
-        fromApi: Boolean = false,
         onComplete: (() -> Unit)? = null,
     ) {
         viewModelScope.launch {
@@ -599,14 +592,12 @@ class KhazanaViewModel @Inject constructor(
                 if (!isRefresh) {
                     _khazanaChapters.value = Response.Loading()
                 }
-                val response =
-                    if (fromApi) repository.getKhazanaChaptersFromApi(subjectId, chapterId)
-                    else repository.getKhazanaChapters(subjectId, chapterId)
-                val decodedData = Base64.getDecoder().decode(response.response)
+                val response = repository.getKhazanaChapters(subjectId, chapterId)
+                val decodedData = Base64.getDecoder().decode(response)
                 val decryptedData = decrypt(decodedData, key, iv)
                 val data: List<KhazanaChaptersItem>? =
                     gson.fromJson(decryptedData, Array<KhazanaChaptersItem>::class.java)?.toList()
-                if (data == null){
+                if (data == null) {
                     throw NullPointerException(nullErrorMsg)
                 } else {
                     _khazanaChapters.value = Response.Success(data)
@@ -638,7 +629,6 @@ class KhazanaViewModel @Inject constructor(
             subjectId = subjectId,
             chapterId = chapterId,
             isRefresh = true,
-            fromApi = true,
             onComplete = {
                 isRefreshing = false
                 onComplete()

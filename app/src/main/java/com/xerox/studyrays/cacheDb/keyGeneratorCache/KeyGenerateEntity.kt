@@ -9,6 +9,7 @@ data class KeyGenerateEntity(
     val id: Int,
     val task1_url: String,
     val task1_final_url: String,
+    val tutorial_url: String,
     val telegram: String,
     val visible: String
 )

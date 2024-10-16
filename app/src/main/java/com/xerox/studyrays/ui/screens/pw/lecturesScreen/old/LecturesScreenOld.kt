@@ -20,6 +20,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,8 +48,17 @@ fun LecturesScreenOld(
     name: String,
     onVideoClicked: (String, String, String, String, String, String, String, String, String) -> Unit,
     onPdfViewClicked: (String, String) -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
     onBackClicked: () -> Unit,
 ) {
+
+    LaunchedEffect(key1 = Unit) {
+        vm.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
+            }
+        )
+    }
 
     val context = LocalContext.current
     val snackbarHostState = remember {

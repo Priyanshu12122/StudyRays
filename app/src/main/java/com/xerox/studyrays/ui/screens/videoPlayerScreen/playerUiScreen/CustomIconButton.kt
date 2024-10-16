@@ -41,3 +41,31 @@ fun CustomIconButton(
         )
     }
 }
+
+@Composable
+fun CustomIconButton2(
+    @DrawableRes iconResId: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    contentDescription: String? = null,
+    reducedIconSize: Boolean = false,
+    bigIcon: Boolean = false,
+) {
+    IconButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+//            .padding(horizontal = 8.dp)
+            .size(54.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = iconResId),
+            contentDescription = contentDescription,
+            modifier = Modifier
+                .size(if(bigIcon) 45.dp else 32.dp)
+                .padding(if (reducedIconSize) 2.dp else 0.dp),
+            tint = Color.White
+        )
+    }
+}

@@ -37,14 +37,18 @@ fun AkNotes(
     onPdfDownloadClick: (String?, String?) -> Unit,
 ) {
 
+    val notesState by vm.akNotes.collectAsState()
+    val result = notesState
+
     LaunchedEffect(key1 = Unit) {
-        vm.getAkNotes(sid = sid, bid = bid, tid = tid)
+        if (result !is Response.Success) {
+            vm.getAkNotes(sid = sid, bid = bid, tid = tid)
+        }
     }
 
-    val notesState by vm.akNotes.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        when (val result = notesState) {
+        when (result) {
             is Response.Error -> {
 
                 DataNotFoundScreen(
@@ -87,19 +91,6 @@ fun AkNotes(
                                     vm.showSnackBar(snackBarHostState)
                                 }
                             })
-//                        LazyColumn {
-//
-//                            items(result.data.data.notesDetails.sortedBy { it.notesno }) {
-//                                EachCardForNotes(title = it.docTitle,
-//                                    onViewPdfClicked = {
-//                                        onPdfViewClicked(it.docUrl ?: "",it.docTitle ?: "")
-//                                    }) {
-//                                    onPdfDownloadClick(it.docUrl, it.docTitle)
-//                                }
-//
-//                            }
-//
-//                        }
 
                     }
                 }

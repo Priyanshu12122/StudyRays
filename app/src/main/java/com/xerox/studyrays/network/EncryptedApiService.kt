@@ -133,6 +133,15 @@ interface EncryptedApiService {
         @Query("topic_slug") topicSlug: String,
     ): String
 
+    @GET(VIDEO_GET_URL)
+    suspend fun getAllVideosPaginated(
+        @Query("batch_id") batchId: String,
+        @Query("subject_slug") subjectSlug: String,
+        @Query("topic_slug") topicSlug: String,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int,
+    ): String
+
     @GET(NOTES_GET_URL)
     suspend fun getAllNotes(
         @Query("batch_id") batchId: String,

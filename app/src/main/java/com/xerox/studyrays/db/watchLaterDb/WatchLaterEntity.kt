@@ -15,7 +15,7 @@ data class WatchLaterEntity(
     val externalId: String,
     val embedCode: String,
     val time: Long,
-    val isAk: Boolean,
     val isKhazana: Boolean,
     val isPw: Boolean,
+    val isOld: Boolean
     )

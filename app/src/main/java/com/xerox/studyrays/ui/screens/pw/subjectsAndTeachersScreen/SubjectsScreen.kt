@@ -1,15 +1,15 @@
 package com.xerox.studyrays.ui.screens.pw.subjectsAndTeachersScreen
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,7 +45,7 @@ import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyVerticalGrid
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubjectsScreen(
     vm: MainViewModel = hiltViewModel(),
@@ -78,14 +78,21 @@ fun SubjectsScreen(
 //        mutableStateOf("")
 //    }
 
+    val navBarState by vm.navBar.collectAsState()
+    val navResult = navBarState
+
     LaunchedEffect(key1 = Unit) {
-        vm.getAllSubjects(batchId = batchId, slug = slug, classValue = classValue)
-        vm.getNavItems()
+        if (result !is ResponseTwo.Success) {
+            vm.getAllSubjects(batchId = batchId, slug = slug, classValue = classValue)
+        }
+        if (navResult !is ResponseTwo.Success) {
+            vm.getNavItems()
+        }
     }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    val navBarState by vm.navBar.collectAsState()
-    when (val navResult = navBarState) {
+
+    when (navResult) {
         is ResponseTwo.Error -> {}
         is ResponseTwo.Loading -> {}
         is ResponseTwo.Nothing -> {}
@@ -118,7 +125,7 @@ fun SubjectsScreen(
                         }
                     }) {
                         Icon(
-                            painter = painterResource(id = R.drawable.telegramoutlined),
+                            painter = painterResource(id = R.drawable.telegram),
                             contentDescription = "",
                             modifier = Modifier.size(25.dp)
                         )
@@ -135,8 +142,9 @@ fun SubjectsScreen(
                         }
                     }) {
                         Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = ""
+                            painter = painterResource(id = R.drawable.megaphone),
+                            contentDescription = "",
+                            modifier = Modifier.size(25.dp)
                         )
                     }
 
@@ -155,48 +163,58 @@ fun SubjectsScreen(
             )
         }
     ) { paddingValues ->
-        when (result) {
-            is ResponseTwo.Error -> {
-                val messageState = rememberMessageBarState()
-                DataNotFoundScreen(
-                    paddingValues = paddingValues,
-                    errorMsg = result.msg,
-                    state = messageState,
-                    shouldShowBackButton = false,
-                    onRetryClicked = {
-                        vm.getAllSubjects(batchId = batchId, slug = slug, classValue = classValue)
-                    }) {
 
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
+            CategoryTabRow2(
+                pagerState = pagerState,
+                categories = tabRowList,
+                onTabClicked = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(it)
+                    }
                 }
-            }
+            )
+            HorizontalPager(
+                state = pagerState
+            ) { page ->
+                when (page) {
+                    0 -> {
+                        when (result) {
+                            is ResponseTwo.Error -> {
+                                val messageState = rememberMessageBarState()
+                                DataNotFoundScreen(
+                                    paddingValues = paddingValues,
+                                    errorMsg = result.msg,
+                                    state = messageState,
+                                    shouldShowBackButton = false,
+                                    onRetryClicked = {
+                                        vm.getAllSubjects(
+                                            batchId = batchId,
+                                            slug = slug,
+                                            classValue = classValue
+                                        )
+                                    }) {
 
-            is ResponseTwo.Loading -> {
-                LoadingScreen(paddingValues = paddingValues)
-
-            }
-
-            is ResponseTwo.Success -> {
-
-
-                Column(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize()
-                ) {
-                    CategoryTabRow2(
-                        pagerState = pagerState,
-                        categories = tabRowList,
-                        onTabClicked = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(it)
+                                }
                             }
-                        }
-                    )
-                    HorizontalPager(
-                        state = pagerState
-                    ) { page ->
-                        when (page) {
-                            0 -> {
+
+                            is ResponseTwo.Loading -> {
+
+                                LazyVerticalGrid(GridCells.Fixed(3)) {
+                                    items(6) {
+                                        EachCardForSubjectLoading()
+                                    }
+                                }
+
+                            }
+
+                            is ResponseTwo.Success -> {
+
+
                                 if (vm.subjectsList.isEmpty()) {
                                     NoFilesFoundScreen()
                                 } else {
@@ -215,7 +233,7 @@ fun SubjectsScreen(
                                             EachCardForSubject(
                                                 imageUrl = it?.subjectImage
                                                     ?: "https://i.ibb.co/r6812HL/Physics.png",
-                                                text = it?.subjectName ?: ""
+                                                text = it?.subjectName ?: "",
                                             ) {
                                                 onClick(
                                                     it?.subjectSlug ?: "",
@@ -239,24 +257,128 @@ fun SubjectsScreen(
 
                                 }
 
+
                             }
 
-                            1 -> {
-                                if (vm.teachersList.isEmpty()) {
-                                    NoFilesFoundScreen()
-                                } else {
-                                    TeacherPagerScreen(list = vm.teachersList)
-                                }
+                            is ResponseTwo.Nothing -> {
+                                Text(text = "Sorry, this is Unavailable")
                             }
+                        }
+                    }
+
+                    1 -> {
+                        if (vm.teachersList.isEmpty()) {
+                            NoFilesFoundScreen()
+                        } else {
+                            TeacherPagerScreen(list = vm.teachersList)
                         }
                     }
                 }
             }
-
-            is ResponseTwo.Nothing -> {
-                Text(text = "Sorry, this is Unavailable")
-            }
         }
+
+//        when (result) {
+//            is ResponseTwo.Error -> {
+//                val messageState = rememberMessageBarState()
+//                DataNotFoundScreen(
+//                    paddingValues = paddingValues,
+//                    errorMsg = result.msg,
+//                    state = messageState,
+//                    shouldShowBackButton = false,
+//                    onRetryClicked = {
+//                        vm.getAllSubjects(batchId = batchId, slug = slug, classValue = classValue)
+//                    }) {
+//
+//                }
+//            }
+//
+//            is ResponseTwo.Loading -> {
+//                LoadingScreen(paddingValues = paddingValues)
+//
+//            }
+//
+//            is ResponseTwo.Success -> {
+//
+//
+//                Column(
+//                    modifier = Modifier
+//                        .padding(paddingValues)
+//                        .fillMaxSize()
+//                ) {
+//                    CategoryTabRow2(
+//                        pagerState = pagerState,
+//                        categories = tabRowList,
+//                        onTabClicked = {
+//                            scope.launch {
+//                                pagerState.animateScrollToPage(it)
+//                            }
+//                        }
+//                    )
+//                    HorizontalPager(
+//                        state = pagerState
+//                    ) { page ->
+//                        when (page) {
+//                            0 -> {
+//                                if (vm.subjectsList.isEmpty()) {
+//                                    NoFilesFoundScreen()
+//                                } else {
+//
+//                                    PullToRefreshLazyVerticalGrid(
+//                                        items = vm.subjectsList,
+//                                        content = {
+////                                            val baseUrl: String? = it?.image?.baseUrl
+////                                            val key: String? = it?.image?.key
+////                                            val imageUrl: String =
+////                                                if (baseUrl.equals(null) || key.equals(null)) {
+////                                                    "https://i.ibb.co/r6812HL/Physics.png"
+////                                                } else {
+////                                                    baseUrl + key
+////                                                }
+//                                            EachCardForSubject(
+//                                                imageUrl = it?.subjectImage
+//                                                    ?: "https://i.ibb.co/r6812HL/Physics.png",
+//                                                text = it?.subjectName ?: "",
+//                                            ) {
+//                                                onClick(
+//                                                    it?.subjectSlug ?: "",
+//                                                    it?.subjectName ?: ""
+//                                                )
+//
+//                                            }
+//                                        },
+//                                        isRefreshing = vm.isRefreshing,
+//                                        onRefresh = {
+//                                            vm.refreshAllSubjects(
+//                                                batchId = batchId,
+//                                                slug = slug,
+//                                                classValue = classValue,
+//                                                onComplete = {
+//                                                    vm.showSnackBar(snackbarHostState)
+//                                                })
+//                                        },
+//                                        gridCells = 3
+//                                    )
+//
+//                                }
+//
+//                            }
+//
+//                            1 -> {
+//                                if (vm.teachersList.isEmpty()) {
+//                                    NoFilesFoundScreen()
+//                                } else {
+//                                    TeacherPagerScreen(list = vm.teachersList)
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//            is ResponseTwo.Nothing -> {
+//                Text(text = "Sorry, this is Unavailable")
+//            }
+//        }
 
     }
 

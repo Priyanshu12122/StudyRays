@@ -42,11 +42,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.studysmart.presentation.components.AddSubjectDialog
 import com.xerox.studyrays.R
 import com.xerox.studyrays.db.studyFocusDb.SessionEntity
 import com.xerox.studyrays.db.studyFocusDb.SubjectsEntity
 import com.xerox.studyrays.db.studyFocusDb.TaskEntityy
+import com.xerox.studyrays.ui.screens.MainViewModel
+import com.xerox.studyrays.ui.studyfocus.components.AddSubjectDialog
 import com.xerox.studyrays.ui.studyfocus.components.CountCard
 import com.xerox.studyrays.ui.studyfocus.components.DeleteDialog
 import com.xerox.studyrays.ui.studyfocus.components.SubjectCard
@@ -60,8 +61,10 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun DashboardScreenRoute(
     viewModel: DashboardViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
     onSubjectCardClick: (Int) -> Unit,
     onTaskCardClick: (Int?) -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
     onSessionCardClick: () -> Unit,
 ) {
 
@@ -69,6 +72,14 @@ fun DashboardScreenRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val recentSessions by viewModel.recentSessions.collectAsStateWithLifecycle()
+
+    LaunchedEffect(key1 = Unit) {
+        mainViewModel.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
+            }
+        )
+    }
 
     DashboardScreen(
         state = state,
@@ -223,8 +234,8 @@ private fun DashboardScreenTopBar() {
     CenterAlignedTopAppBar(
         title = {
             Text(
-                text = "StudySmart",
-                style = MaterialTheme.typography.headlineMedium
+                text = "Track Your Studies",
+//                style = MaterialTheme.typography.headlineMedium
             )
         }
     )

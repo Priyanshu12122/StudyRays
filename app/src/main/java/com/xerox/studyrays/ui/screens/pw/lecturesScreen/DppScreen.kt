@@ -3,6 +3,8 @@ package com.xerox.studyrays.ui.screens.pw.lecturesScreen
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -37,16 +39,21 @@ fun DppScreen(
     onPdfViewClicked: (String, String) -> Unit,
     onPdfDownloadClicked: (String?, String?) -> Unit,
 ) {
-    LaunchedEffect(key1 = Unit) {
-        vm.getAllDpp(
-            batchId = batchId,
-            subjectSlug = subjectSlug,
-            topicSlug = topicSlug
-        )
-    }
 
     val state by vm.dpp.collectAsState()
     val dppResult = state
+
+    LaunchedEffect(key1 = Unit) {
+        if(dppResult !is Response.Success){
+            vm.getAllDpp(
+                batchId = batchId,
+                subjectSlug = subjectSlug,
+                topicSlug = topicSlug
+            )
+        }
+    }
+
+
 
     var searchText by rememberSaveable {
         mutableStateOf("")
@@ -73,7 +80,17 @@ fun DppScreen(
             }
 
             is Response.Loading -> {
-                LoadingScreen(paddingValues = PaddingValues())
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+                    LazyColumn {
+                        items(10) {
+                            EachCardForNotesLoading()
+                        }
+                    }
+                }
             }
 
             is Response.Success -> {
@@ -103,7 +120,8 @@ fun DppScreen(
                             },
                             items = if (searchText == "") list else filteredList,
                             content = {
-                                EachCardForNotes(title = it.homework_topic_name,
+                                EachCardForNotes(
+                                    title = it.homework_topic_name,
                                     onViewPdfClicked = {
                                         onPdfViewClicked(
                                             it.attachment_url,

@@ -99,17 +99,27 @@ fun SearchSectionOld(
                             item = searchItem,
                             isSaved = isSaved,
                             onFavouriteIconClicked = { value ->
-                                vm.onFavoriteClick(FavouriteCourse(externalId = value))
+                                vm.onFavoriteClick(FavouriteCourse(
+                                    externalId = value,
+                                    name = searchItem.name,
+                                    byName = "",
+                                    language = "" ,
+                                    imageUrl = searchItem.previewImageUrl,
+                                    slug = "",
+                                    classValue = searchItem.`class`,
+                                    isOld = true
+                                )
+                                )
                                 savedStatusMap[searchItem.id] = !isSaved
                                 vm.showToast(
                                     context,
-                                    if (!isSaved) "${searchItem.id} added to favourites list" else "${searchItem.id} removed from favourites list"
+                                    if (!isSaved) "${searchItem.name} added to favourites list" else "${searchItem.name} removed from favourites list"
                                 )
                             },
                             checkIfSaved = {
                                 scope.launch {
                                     val saved =
-                                        vm.checkIfItemIsPresentInDb(FavouriteCourse(it))
+                                        vm.checkIfItemIsPresentInDb(it)
                                     savedStatusMap[searchItem.id] = saved
                                 }
                             }) {

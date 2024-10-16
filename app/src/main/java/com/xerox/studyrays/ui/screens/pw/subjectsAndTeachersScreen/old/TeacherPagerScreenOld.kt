@@ -23,14 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.xerox.studyrays.cacheDb.pwCache.subjectsAndTeachersCache.relations.TeacherIdWithImage
-import com.xerox.studyrays.model.pwModel.batchDetailss.Teacher
+import com.xerox.studyrays.model.pwModel.batchDetails.TeacherId
 import com.xerox.studyrays.ui.screens.pw.subjectsAndTeachersScreen.EachCardForTeacher
 
 
 @Composable
 fun TeacherPagerScreenOld(
-    list: List<TeacherIdWithImage?>,
+    list: List<TeacherId?>,
 ) {
 
     LazyColumn {
@@ -43,9 +42,9 @@ fun TeacherPagerScreenOld(
             if (isOpen) {
                 TeacherAlertDialog(
                     imageUrl = it?.imageId?.baseUrl + it?.imageId?.key,
-                    teacherName = it?.teacherId?.firstName + it?.teacherId?.lastName,
-                    qualifications = it?.teacherId?.qualification ?: "Not provided",
-                    experience = it?.teacherId?.experience ?: "Not provided"
+                    teacherName = it?.firstName + it?.lastName,
+                    qualifications = it?.qualification ?: "Not provided",
+                    experience = it?.experience ?: "Not provided"
                 ) {
                     isOpen = false
                 }
@@ -53,10 +52,10 @@ fun TeacherPagerScreenOld(
 
             EachCardForTeacher(
                 imageUrl = it?.imageId?.baseUrl + it?.imageId?.key,
-                teacherName = it?.teacherId?.firstName + it?.teacherId?.lastName,
-                qualifications = it?.teacherId?.qualification ?: "Not provided",
-                featuredLine = it?.teacherId?.featuredLine ?: "Hello Hello nazre screen pe",
-                experience = it?.teacherId?.experience ?: "Not provided"
+                teacherName = it?.firstName + it?.lastName,
+                qualifications = it?.qualification ?: "Not provided",
+                featuredLine = it?.featuredLine ?: "Hello Hello nazre screen pe",
+                experience = it?.experience ?: "Not provided"
             ) {
                 isOpen = true
 

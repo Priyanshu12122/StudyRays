@@ -7,12 +7,15 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -36,19 +40,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.xerox.studyrays.cacheDb.pwCache.courseDb.PwCourseEntity
+import com.xerox.studyrays.model.pwModel.CourseItem
+import com.xerox.studyrays.model.pwModel.CourseItemX
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Currency
 import java.util.Date
@@ -82,6 +91,22 @@ fun navigateTo3(navController: NavHostController, route: String) {
     }
 }
 
+fun navigateTo4(navController: NavHostController, route: String) {
+    navController.navigate(route) {
+        popUpTo(0) { inclusive = true }
+//        launchSingleTop = true
+//        restoreState = true
+    }
+}
+
+fun NavHostController.navigateSingleTopTo(route: String) =
+    this.navigate(route) {
+        // Ensures there will be at most one copy of a given destination on
+        // the top of the back stack i.e. re-tapping the same tab multiple
+        // times doesn't launch multiple copies of the same destination
+        launchSingleTop = true
+    }
+
 
 
 data class EachCardForClass(
@@ -91,10 +116,14 @@ data class EachCardForClass(
 
 data class Category(
     val name: String,
-    val category: MutableList<PwCourseEntity>,
+    val category: MutableList<CourseItemX>,
 )
 
-@OptIn(ExperimentalFoundationApi::class)
+data class Category2(
+    val name: String,
+    val category: MutableList<CourseItem>,
+)
+
 @Composable
 fun CategoryTabRow(
     pagerState: PagerState,
@@ -119,7 +148,81 @@ fun CategoryTabRow(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
+@Composable
+fun CategoryTabRow44(
+    pagerState: PagerState,
+    categories: List<Category2>,
+    onTabClicked: (Int) -> Unit,
+) {
+    ScrollableTabRow(
+        selectedTabIndex = pagerState.currentPage,
+        edgePadding = 2.dp
+    ) {
+        categories.forEachIndexed { index, category ->
+
+            Tab(selected = pagerState.currentPage == index, onClick = { onTabClicked(index) }) {
+                Text(
+                    text = category.name,
+                    modifier = Modifier.padding(horizontal = 2.dp, vertical = 8.dp)
+                )
+
+            }
+        }
+
+    }
+}
+
+
+@Composable
+fun MatchTabs(
+    tabs: List<String>,
+    pagerState: PagerState,
+    onTabSelected: (Int) -> Unit,
+) {
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val tabBackgroundColor = Color.DarkGray.copy(alpha = 0.3f)
+    val selectedTabColor = Color.DarkGray
+    val selectedTextColor = Color.White
+    val unselectedTextColor = Color.LightGray
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(65.dp)
+            .background(backgroundColor)
+            .padding(vertical = 4.dp, horizontal = 8.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(tabBackgroundColor)
+    ) {
+        tabs.forEachIndexed { index, title ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(2.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (pagerState.currentPage == index) selectedTabColor else Color.Transparent)
+                    .clickable(
+                        indication = null,
+                        interactionSource = MutableInteractionSource()
+                    ) {
+                        onTabSelected(index)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = title,
+                    color = if (pagerState.currentPage == index) selectedTextColor else unselectedTextColor,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp
+                )
+            }
+        }
+    }
+}
+
+
 @Composable
 fun CategoryTabRow2(
     pagerState: PagerState,
@@ -212,7 +315,7 @@ fun Modifier.shimmerEffect(): Modifier = composed {
     var size by remember {
         mutableStateOf(IntSize.Zero)
     }
-    val transition = rememberInfiniteTransition()
+    val transition = rememberInfiniteTransition(label = "")
     val startOffsetX by transition.animateFloat(
         initialValue = -2 * size.width.toFloat(),
         targetValue = 2 * size.width.toFloat(),
@@ -224,9 +327,9 @@ fun Modifier.shimmerEffect(): Modifier = composed {
     background(
         brush = Brush.linearGradient(
             colors = listOf(
-                if (isSystemInDarkTheme()) Color(0xFF535151) else Color(0xFFB8B5B5),
+                Color(0xFF535151),
                 Color(0xFF8F8B8B),
-                if (isSystemInDarkTheme()) Color(0xFF535151) else Color(0xFFB8B5B5),
+                Color(0xFF535151),
             ),
             start = Offset(startOffsetX, 0f),
             end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
@@ -312,8 +415,16 @@ fun String.toTimeAgo(): String {
     }
 }
 
+fun formatDateString(inputDate: String): String {
+    // Define the input date format
+    val inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX")
 
+    // Define the output date format
+    val outputFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
 
+    // Parse the input date string to LocalDateTime
+    val date = LocalDateTime.parse(inputDate, inputFormatter)
 
-
-
+    // Format the LocalDateTime to the desired output format
+    return date.format(outputFormatter)
+}

@@ -26,9 +26,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.network.Response
+import com.xerox.studyrays.ui.screens.MainViewModel
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
+import com.xerox.studyrays.ui.screens.pw.chaptersScreen.EachCardForChapterLoading
 import com.xerox.studyrays.utils.DataNotFoundScreen
-import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.LoadingTemplate
 import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn2
 
@@ -37,19 +39,33 @@ import com.xerox.studyrays.utils.PullToRefreshLazyColumn2
 @Composable
 fun KhazanaChaptersScreen(
     vm: KhazanaViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
     subjectId: String,
     chapterId: String,
     imageUrl: String,
     courseName: String,
     onBackClick: () -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
     onClick: (subjectId: String, chapterId: String, topicId: String, topicName: String) -> Unit,
 ) {
 
+    val state by vm.khazanaChapters.collectAsState()
+    val result = state
+
     LaunchedEffect(key1 = Unit) {
-        vm.getKhazanaChapters(subjectId = subjectId, chapterId = chapterId)
+        if (result !is Response.Success) {
+            vm.getKhazanaChapters(subjectId = subjectId, chapterId = chapterId)
+        }
+
+        mainViewModel.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
+            }
+        )
+
     }
 
-    val state by vm.khazanaChapters.collectAsState()
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val snackBarHostState = remember { SnackbarHostState() }
 
@@ -79,7 +95,7 @@ fun KhazanaChaptersScreen(
         }
     ) { paddingValues ->
 
-        when (val result = state) {
+        when (result) {
             is Response.Error -> {
                 val messageState = rememberMessageBarState()
 
@@ -96,12 +112,16 @@ fun KhazanaChaptersScreen(
             }
 
             is Response.Loading -> {
-                LoadingScreen(paddingValues = paddingValues)
+
+                LoadingTemplate(paddingValues = paddingValues) {
+                    EachCardForChapterLoading()
+                }
+
             }
 
             is Response.Success -> {
 
-                if (result.data.isEmpty()){
+                if (result.data.isEmpty()) {
                     NoFilesFoundScreen()
                 } else {
                     Column(

@@ -1,6 +1,5 @@
 package com.xerox.studyrays.ui.screens.pw.chaptersScreen.old
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -39,16 +38,27 @@ fun ChaptersScreenOld(
     subjectId: String,
     subject: String,
     onBackClicked: () -> Unit,
+    onNavigateToKeyScreen: () -> Unit,
     onClick: (String, String) -> Unit,
 ) {
 
-    LaunchedEffect(key1 = Unit) {
-        vm.getAllLessonsOld(subjectId)
-        Log.d("TAG", "ChaptersScreenOld: $subjectId   $subject")
-    }
-
     val state by vm.lessonsOld.collectAsState()
     val result = state
+
+    LaunchedEffect(key1 = Unit) {
+        if (result !is Response.Success) {
+            vm.getAllLessonsOld(subjectId)
+        }
+
+        vm.checkStartDestinationDuringNavigation(
+            onNavigate = {
+                onNavigateToKeyScreen()
+            }
+        )
+
+    }
+
+
     val snackbarHostState = remember { SnackbarHostState() }
 
 

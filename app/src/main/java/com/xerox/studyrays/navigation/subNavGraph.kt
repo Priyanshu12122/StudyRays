@@ -1,7 +1,11 @@
 package com.xerox.studyrays.navigation
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Build
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -28,6 +32,7 @@ import com.xerox.studyrays.ui.screens.pw.chaptersScreen.ChaptersScreen
 import com.xerox.studyrays.ui.screens.pw.chaptersScreen.old.ChaptersScreenOld
 import com.xerox.studyrays.ui.screens.pw.classesscreen.ClassesScreen
 import com.xerox.studyrays.ui.screens.pw.coursesscreen.CoursesScreen
+import com.xerox.studyrays.ui.screens.pw.coursesscreen.CoursesScreenOld
 import com.xerox.studyrays.ui.screens.pw.favouriteCoursesScreen.FavouriteCoursesScreen
 import com.xerox.studyrays.ui.screens.pw.lecturesScreen.LecturesScreen
 import com.xerox.studyrays.ui.screens.pw.lecturesScreen.old.LecturesScreenOld
@@ -37,13 +42,13 @@ import com.xerox.studyrays.ui.screens.pw.subjectsAndTeachersScreen.old.SubjectsS
 import com.xerox.studyrays.ui.screens.videoPlayerScreen.VideoPlayerScreen
 import com.xerox.studyrays.ui.screens.videoPlayerScreen.taskCompletedScreen.TaskCompletedScreen
 import com.xerox.studyrays.ui.screens.videoPlayerScreen.videoDownloaderTask.VideoDownloaderTaskScreen
+import com.xerox.studyrays.utils.SetSystemUiColors
 import com.xerox.studyrays.utils.UseNewerVersionScreen
 import com.xerox.studyrays.utils.navigateTo
 import com.xerox.studyrays.utils.navigateTo2
 import com.xerox.studyrays.utils.navigateTo3
 
 
-//@Composable
 fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
 
     val arg_key = "url"
@@ -60,43 +65,80 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
     val slugg = "slug"
     val classValues = "classValue"
     val subjectSluggg = "subjectSlug"
+    val isOld = "isOld"
+    val yes = true
+    val no = false
+
 
 
 
 
     navigation(
-        startDestination = "${NavRoutes.eachClass}/{class}/{isOld}",
+        startDestination = "${NavRoutes.eachClass}/{class}",
         route = NavGraphRoutes.mainScreenNavigation
     )
     {
 
-        composable(route = "${NavRoutes.eachClass}/{class}/{isOld}",
+        composable(route = "${NavRoutes.eachClass}/{class}",
             arguments = listOf(
                 navArgument(name = "class") {
                     type = NavType.StringType
-                },
-                navArgument(name = "isOld") {
-                    type = NavType.BoolType
                 }
             )
         ) {
+
+            val activity = LocalContext.current as Activity
+            SetSystemUiColors(
+                activity = activity,
+                statusBarColor = MaterialTheme.colorScheme.background,
+                navigationBarColor = MaterialTheme.colorScheme.background
+            )
             val classValue = it.arguments?.getString("class")
-            val isOld = it.arguments?.getBoolean("isOld")
             CoursesScreen(
                 classValue = classValue!!,
-                isOld = isOld!!,
                 onBackClicked = {
                     navController.navigateUp()
                 },
-                onClickOld = { courseId, name ->
-                    navigateTo2(
-                        navController,
-                        NavRoutes.subjectsScreenOld + "?$title=$name&$externalId=$courseId"
-                    )
-                }) { batchIdd, slug, classValuee, name ->
+                onNavigateToKeyScreen = {
+                    navigateTo(navController, NavRoutes.keyGenerationScreen)
+                }
+            ) { batchIdd, slug, classValuee, name ->
                 navigateTo2(
                     navController,
                     NavRoutes.subjectsScreen + "?$title=$name&$externalId=$batchIdd&$slugg=$slug&$classValues=$classValuee"
+                )
+            }
+
+
+        }
+
+        composable(route = "${NavRoutes.eachClassOld}/{class}",
+            arguments = listOf(
+                navArgument(name = "class") {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            val activity = LocalContext.current as Activity
+            SetSystemUiColors(
+                activity = activity,
+                statusBarColor = MaterialTheme.colorScheme.background,
+                navigationBarColor = MaterialTheme.colorScheme.background
+            )
+
+            val classValue = it.arguments?.getString("class")
+            CoursesScreenOld(
+                classValue = classValue!!,
+                onBackClicked = {
+                    navController.navigateUp()
+                },
+                onNavigateToKeyScreen = {
+                    navigateTo(navController, NavRoutes.keyGenerationScreen)
+                }
+            ) { batchIdd, name ->
+                navigateTo2(
+                    navController,
+                    NavRoutes.subjectsScreenOld + "?$title=$name&$externalId=$batchIdd"
                 )
             }
         }
@@ -113,14 +155,14 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                 }
             )
         ) {
-            val isOld = true
+            val isOldd = true
             SubjectsScreenOld(
                 courseId = it.arguments?.getString(externalId)!!,
                 onBackIconClicked = {
                     navController.navigateUp()
                 },
                 onAnnouncementsClicked = { batchId ->
-                    navigateTo2(navController, NavRoutes.announcementsScreen + "/$batchId/$isOld")
+                    navigateTo2(navController, NavRoutes.announcementsScreen + "/$batchId/$isOldd")
                 },
                 onClick = { subjectId, subjectName ->
                     navigateTo2(
@@ -129,6 +171,7 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                     )
                 }
             )
+
 
         }
 
@@ -151,6 +194,8 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
         ) {
 
             val batchId = it.arguments?.getString(externalId)
+
+
             val batchName = it.arguments?.getString(title)
             val classValuee = it.arguments?.getString(classValues)
             val slug = it.arguments?.getString(slugg)
@@ -165,8 +210,11 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                         navController.navigateUp()
                     }
                 },
-                onAnnouncementsClicked = { batchId ->
-                    navigateTo2(navController, NavRoutes.announcementsScreen + "/$batchId/$isOld")
+                onAnnouncementsClicked = { batchIdd ->
+                    navigateTo2(
+                        navController,
+                        NavRoutes.announcementsScreen + "/$batchIdd/$isOld"
+                    )
 
                 }) { subjectSlug, subjectName ->
                 navigateTo2(
@@ -196,8 +244,14 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                 onBackClicked = {
                     navController.navigateUp()
                 },
+                onNavigateToKeyScreen = {
+                    navigateTo(navController, NavRoutes.keyGenerationScreen)
+                },
                 onClick = { slug, name ->
-                    navigateTo2(navController, NavRoutes.lecturesScreenOld+"?$slugg=$slug&$bname=$name")
+                    navigateTo2(
+                        navController,
+                        NavRoutes.lecturesScreenOld + "?$slugg=$slug&$bname=$name"
+                    )
                 })
         }
 
@@ -220,6 +274,7 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
         )
     ) {
 
+
         val batchId = it.arguments?.getString(externalId)
         val subjectSlug = it.arguments?.getString(slugg)
         val subjectName = it.arguments?.getString(bname)
@@ -229,6 +284,9 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
             batchId = batchId!!,
             subjectSlug = subjectSlug!!,
             subject = subjectName!!,
+            onNavigateToKeyScreen = {
+                navigateTo(navController, NavRoutes.keyGenerationScreen)
+            },
             onBackClicked = {
                 navController.navigateUp()
             }) { slug, name ->
@@ -237,6 +295,7 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                 NavRoutes.lecturesScreen + "?$externalId=$batchId&$subjectSluggg=$subjectSlug&$slugg=$slug&$bname=$name&$title=$batchName"
             )
         }
+
 
     }
 
@@ -276,8 +335,11 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                 onVideoClicked = { url, titlee, id, embedCodee, videoIdd, imageUrll, createdAtt, durationn, pw ->
                     navigateTo2(
                         navController,
-                        NavRoutes.videoScreen + "?$arg_key=$url&$title=$titlee&$videoId=$videoIdd&$bname=$batchName&$externalId=$id&$embedCode=$embedCodee&$imageUrl=$imageUrll&$dateCreated=$createdAtt&$duration=$durationn&$isWhat=$pw&$slugg=$slug"
+                        NavRoutes.videoScreen + "?$arg_key=$url&$title=$titlee&$videoId=$videoIdd&$bname=$batchName&$externalId=$id&$embedCode=$embedCodee&$imageUrl=$imageUrll&$dateCreated=$createdAtt&$duration=$durationn&$isWhat=$pw&$slugg=$slug&$isOld=$no"
                     )
+                },
+                onNavigateToKeyScreen = {
+                    navigateTo(navController, NavRoutes.keyGenerationScreen)
                 },
                 onPdfViewClicked = { id, namee ->
                     navigateTo2(
@@ -309,17 +371,20 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
             LecturesScreenOld(
                 slug = it.arguments?.getString(slugg)!!,
                 name = it.arguments?.getString(bname)!!,
-                onVideoClicked = {url, titlee, id, embedCodee, videoIdd, imageUrll, createdAtt, durationn, pw ->
+                onVideoClicked = { url, titlee, id, embedCodee, videoIdd, imageUrll, createdAtt, durationn, pw ->
                     navigateTo2(
                         navController,
-                        NavRoutes.videoScreen + "?$arg_key=$url&$title=$titlee&$videoId=$videoIdd&$bname=batchName&$externalId=$id&$embedCode=$embedCodee&$imageUrl=$imageUrll&$dateCreated=$createdAtt&$duration=$durationn&$isWhat=$pw"
+                        NavRoutes.videoScreen + "?$arg_key=$url&$title=$titlee&$videoId=$videoIdd&$bname=batchName&$externalId=$id&$embedCode=$embedCodee&$imageUrl=$imageUrll&$dateCreated=$createdAtt&$duration=$durationn&$isWhat=$pw&$isOld=$yes"
                     )
                 },
-                onPdfViewClicked = {id, namee ->
+                onPdfViewClicked = { id, namee ->
                     navigateTo2(
                         navController,
                         NavRoutes.pdfViewerScreen + "?$externalId=$id&$title=$namee"
                     )
+                },
+                onNavigateToKeyScreen = {
+                    navigateTo(navController, NavRoutes.keyGenerationScreen)
                 },
                 onBackClicked = {
                     navController.navigateUp()
@@ -352,7 +417,7 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
 
     }
 
-    composable(route = NavRoutes.videoScreen + "?$arg_key={$arg_key}&$title={$title}&$videoId={$videoId}&$bname={$bname}&$externalId={$externalId}&$embedCode={$embedCode}&$imageUrl={$imageUrl}&$dateCreated={$dateCreated}&$duration={$duration}&$isWhat={$isWhat}&$slugg={$slugg}",
+    composable(route = NavRoutes.videoScreen + "?$arg_key={$arg_key}&$title={$title}&$videoId={$videoId}&$bname={$bname}&$externalId={$externalId}&$embedCode={$embedCode}&$imageUrl={$imageUrl}&$dateCreated={$dateCreated}&$duration={$duration}&$isWhat={$isWhat}&$slugg={$slugg}&$isOld={$isOld}",
         arguments = listOf(
             navArgument(name = arg_key) {
                 type = NavType.StringType
@@ -399,6 +464,11 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
             navArgument(name = slugg) {
                 type = NavType.StringType
                 nullable = true
+            },
+            navArgument(name = isOld) {
+                type = NavType.BoolType
+                defaultValue = false
+                nullable = false
             }
 
         ),
@@ -410,6 +480,14 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
             }
         )
     ) { navBackStackEntry ->
+
+        val activity = LocalContext.current as Activity
+        SetSystemUiColors(
+            activity = activity,
+            statusBarColor = Color.Black,
+            navigationBarColor = MaterialTheme.colorScheme.background
+        )
+
         val url = navBackStackEntry.arguments?.getString(arg_key)
         val titlee = navBackStackEntry.arguments?.getString(title)
         val batchName = navBackStackEntry.arguments?.getString(bname)
@@ -422,6 +500,7 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
         val durationn = navBackStackEntry.arguments?.getString(duration)
         val isWhatt = navBackStackEntry.arguments?.getString(isWhat)
         val topicSlug = navBackStackEntry.arguments?.getString(slugg)
+        val isOldd = navBackStackEntry.arguments?.getBoolean(isOld)
 
         when (shouldOpenApp) {
             "true" -> {
@@ -436,7 +515,11 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                     createdAt = dateCreatedd ?: "00",
                     duration = durationn ?: "00",
                     topicSlug = topicSlug ?: "",
+                    isOld = isOldd!!,
                     isWhat = isWhatt!!,
+                    onNavigateToKeyScreen = {
+                        navigateTo(navController, NavRoutes.keyGenerationScreen)
+                    },
                     onNavigateToTaskScreen = { taskUrl, shortenedUrl ->
                         navigateTo2(
                             navController,
@@ -471,6 +554,10 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                     duration = durationn ?: "00",
                     isWhat = isWhatt!!,
                     topicSlug = topicSlug ?: "",
+                    isOld = isOldd!!,
+                    onNavigateToKeyScreen = {
+                        navigateTo(navController, NavRoutes.keyGenerationScreen)
+                    },
                     onNavigateToTaskScreen = { taskUrl, shortenedUrl ->
                         navigateTo2(
                             navController,
@@ -492,6 +579,14 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
     }
 
     composable(route = NavRoutes.favouriteCoursesScreen) {
+
+        val activity = LocalContext.current as Activity
+        SetSystemUiColors(
+            activity = activity,
+            statusBarColor = MaterialTheme.colorScheme.background,
+            navigationBarColor = MaterialTheme.colorScheme.background
+        )
+
         FavouriteCoursesScreen(onBackClicked = {
             navController.navigateUp()
         },
@@ -500,19 +595,40 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                     navController,
                     NavRoutes.khazanaChaptersScreen + "/$subjectId/$chapterId?$title=$courseName&$arg_key=$imageUrl"
                 )
+            },
+            onCLick = { id, name, sluggg, classValuee ->
+                navigateTo2(
+                    navController,
+                    NavRoutes.subjectsScreen + "?$title=$name&$externalId=$id&$slugg=$sluggg&$classValues=$classValuee"
+                )
+            },
+            onNavigateToKeyScreen = {
+                navigateTo(navController, NavRoutes.keyGenerationScreen)
+            },
+            onOldClick = { id, name ->
+                navigateTo2(
+                    navController,
+                    NavRoutes.subjectsScreenOld + "?$title=$name&$externalId=$id"
+                )
             }
-        ) { id, name ->
-            navigateTo2(
-                navController,
-                NavRoutes.subjectsScreen + "?$title=$name&$externalId=$id"
-            )
-        }
+        )
     }
 
     composable(route = NavRoutes.classes) {
-        ClassesScreen(shouldShow = true, onBackClicked = {
-            navController.navigateUp()
-        },
+
+
+        val activity = LocalContext.current as Activity
+
+        SetSystemUiColors(
+            activity = activity,
+            statusBarColor = MaterialTheme.colorScheme.background,
+            navigationBarColor = MaterialTheme.colorScheme.background
+        )
+        ClassesScreen(
+            shouldShow = true,
+            onBackClicked = {
+                navController.navigateUp()
+            },
             onBatchClicked = { id, name, classValue, sluggg ->
                 navigateTo2(
                     navController,
@@ -520,18 +636,38 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                     NavRoutes.subjectsScreen + "?$title=$name&$externalId=$id&$slugg=$sluggg&$classValues=$classValue"
                 )
             },
-            onOldBatchClick = { id, name ->
-                navigateTo2(navController, NavRoutes.subjectsScreenOld+"?$title=$name&$externalId=$id")
-            },
-            onEachCardOfOldBatchClicked = { classValue, isOld ->
-                navigateTo2(navController, "${NavRoutes.eachClass}/$classValue/$isOld")
+            onActualCourseClicked = { batchIdd, slug, classValuee, name ->
+                navigateTo2(
+                    navController,
+                    NavRoutes.subjectsScreen + "?$title=$name&$externalId=$batchIdd&$slugg=$slug&$classValues=$classValuee"
+                )
 
-            }) { classValue, isOld ->
-            navigateTo2(navController, "${NavRoutes.eachClass}/$classValue/$isOld")
+            },
+            onOldBatchClick = { id, name ->
+                navigateTo2(
+                    navController,
+                    NavRoutes.subjectsScreenOld + "?$title=$name&$externalId=$id"
+                )
+            },
+            onEachCardOfOldBatchClicked = { classValue ->
+                navigateTo2(navController, "${NavRoutes.eachClassOld}/$classValue")
+
+            }) { classValue ->
+            navigateTo2(navController, "${NavRoutes.eachClass}/$classValue")
         }
+
+
     }
 
     composable(route = NavRoutes.khazanaScreen) {
+
+        val activity = LocalContext.current as Activity
+        SetSystemUiColors(
+            activity = activity,
+            statusBarColor = MaterialTheme.colorScheme.background,
+            navigationBarColor = MaterialTheme.colorScheme.background
+        )
+
         KhazanaScreen(shouldShow = true,
             onClick = {
                 navigateTo2(navController, NavRoutes.khazanaSubjectsScreen + "/$it")
@@ -616,14 +752,17 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
         val subjectId = it.arguments?.getString("subjectId")
         val chapterId = it.arguments?.getString("chapterId")
         val courseName = it.arguments?.getString(title)
-        val imageUrl = it.arguments?.getString(arg_key)
+        val imageUrll = it.arguments?.getString(arg_key)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             KhazanaChaptersScreen(
                 subjectId = subjectId!!,
                 chapterId = chapterId!!,
                 courseName = courseName!!,
-                imageUrl = imageUrl!!,
+                imageUrl = imageUrll!!,
+                onNavigateToKeyScreen = {
+                    navigateTo(navController, NavRoutes.keyGenerationScreen)
+                },
                 onBackClick = { navController.navigateUp() }) { subjectIdd, chapterIdd, topicId, topicName ->
                 navigateTo2(
                     navController,
@@ -667,8 +806,11 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                 onVideoClicked = { url, topicNamee, videoIdd, imageUrll, createdAtt, durationn, khazana ->
                     navigateTo2(
                         navController,
-                        NavRoutes.videoScreen + "?$arg_key=$url&$title=$topicNamee&$videoId=$videoIdd&$embedCode=ccc&$imageUrl=$imageUrll&$dateCreated=$createdAtt&$duration=$durationn&$isWhat=$khazana"
+                        NavRoutes.videoScreen + "?$arg_key=$url&$title=$topicNamee&$videoId=$videoIdd&$embedCode=ccc&$imageUrl=$imageUrll&$dateCreated=$createdAtt&$duration=$durationn&$isWhat=$khazana&$isOld=$yes"
                     )
+                },
+                onNavigateToKeyScreen = {
+                    navigateTo(navController, NavRoutes.keyGenerationScreen)
                 },
                 onPdfViewClicked = { id, name ->
                     navigateTo2(
@@ -687,6 +829,14 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
 
 
     composable(route = NavRoutes.akIndexScreen) {
+
+        val activity = LocalContext.current as Activity
+        SetSystemUiColors(
+            activity = activity,
+            statusBarColor = MaterialTheme.colorScheme.background,
+            navigationBarColor = MaterialTheme.colorScheme.background
+        )
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             AkIndex(
                 onClick = {
@@ -737,6 +887,9 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             AkLesson(sid = it.arguments?.getInt("sid")!!, bid = it.arguments?.getInt("bid")!!,
+                onNavigateToKeyScreen = {
+                    navigateTo(navController, NavRoutes.keyGenerationScreen)
+                },
                 onClick = { sid, tid, bid ->
                     navigateTo2(navController, NavRoutes.akVideosScreen + "/$sid/$tid/$bid")
                 }) {
@@ -772,6 +925,9 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
                         navController,
                         NavRoutes.akVideoUScreen + "/$key/$sid/$bid/$tid/$lid?$title=$titlee&$videoId=$uniqueId"
                     )
+                },
+                onNavigateToKeyScreen = {
+                    navigateTo(navController, NavRoutes.keyGenerationScreen)
                 },
                 onPdfViewClicked = { id, name ->
                     navigateTo2(
@@ -900,10 +1056,10 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
 
     composable(route = NavRoutes.watchLaterScreen) {
         WatchLaterScreen(
-            onVideoClicked = { url, titlee, id, embedCodee, videoIdd, imageUrll, createdAtt, durationn, isWhatt ->
+            onVideoClicked = { url, titlee, id, embedCodee, videoIdd, imageUrll, createdAtt, durationn, isWhatt, isOldd ->
                 navigateTo2(
                     navController,
-                    NavRoutes.videoScreen + "?$arg_key=$url&$title=$titlee&$videoId=$videoIdd&$bname=$bname&$externalId=$id&$embedCode=$embedCodee$imageUrl=$imageUrll&$dateCreated=$createdAtt&$duration=$durationn&$isWhat=$isWhatt"
+                    NavRoutes.videoScreen + "?$arg_key=$url&$title=$titlee&$videoId=$videoIdd&$bname=$bname&$externalId=$id&$embedCode=$embedCodee$imageUrl=$imageUrll&$dateCreated=$createdAtt&$duration=$durationn&$isWhat=$isWhatt&$isOld=$isOldd"
                 )
 
             },
@@ -932,9 +1088,5 @@ fun NavGraphBuilder.subNavGraph(navController: NavHostController) {
             })
     }
 
+
 }
-
-
-
-
-

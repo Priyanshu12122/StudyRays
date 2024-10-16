@@ -17,6 +17,9 @@ interface SubjectDao {
     @Query("SELECT SUM(goalHours) FROM SubjectsEntity")
     fun getTotalGoalHours(): Flow<Float>
 
+    @Query("SELECT SUM(goalHours) FROM SubjectsEntity")
+    fun getTotalGoalHoursNormal(): Float
+
     @Query("SELECT * FROM SubjectsEntity WHERE subjectId = :subjectId")
     suspend fun getSubjectById(subjectId: Int): SubjectsEntity?
 
@@ -25,4 +28,7 @@ interface SubjectDao {
 
     @Query("SELECT * FROM SubjectsEntity")
     fun getAllSubjects(): Flow<List<SubjectsEntity>>
+
+    @Query("SELECT * FROM SubjectsEntity")
+    suspend fun getAllSubjectsNormal(): List<SubjectsEntity>
 }

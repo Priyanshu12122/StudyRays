@@ -4,7 +4,8 @@ package com.xerox.studyrays.utils
 object Constants {
 
 //    const val BASE_URL = "https://extractapi.xyz/"
-    const val BASE_URL = "https://devjisu.com/"
+//    const val BASE_URL = "https://devjisu.com/"
+    const val BASE_URL = "https://studyrays.site/"
     const val GET_URL = "/newapp/course.php"
     const val GET_URL_OLD = "/c.php"
     const val SUBJECT_GET_URL_OLD = "/app/subjects.php"
@@ -19,50 +20,56 @@ object Constants {
     const val NOTES_GET_URL_OLD = "/app/notes.php"
     const val DPP_SOLUTION_GET_URL_OLD = "/app/dppsoln.php"
     const val DPP_GET_URL_OLD = "/app/dpp.php"
-    const val PROMO_URL = "/app/promo.php"
+    const val PROMO_URL = "/newapp/promo.php"
     const val SEARCH_URL = "/newapp/search.php"
     const val SEARCH_URL_OLD = "/app/search.php"
-    const val KHAZANA_URL = "/app/khazana/index.php"
-    const val NAV_URL = "/app/nav.php"
+    const val KHAZANA_URL = "/newapp/khazana/index.php"
+    const val NAV_URL = "/newapp/nav.php"
 //    const val ALERT_URL = "/app/alert.php"
-    const val ALERT_URL = "/app/version.php"
+    const val ALERT_URL = "/newapp/version.php"
     const val TOTAL_FEE_URL = "/app/get_total_fee.php"
     const val COMMENTS_URL = "/newapp/comments.php"
     const val ANNOUNCEMENTS_URL_OLD = "/app/pw_announcement.php"
     const val ANNOUNCEMENTS_URL = "/newapp/pw_announcement.php"
+    const val FETCH_FILTERS = "/newapp/fetch_filters.php"
 
 
-    const val KHAZANA_COURSES_URL = "/app/khazana/courses.php"
-    const val KHAZANA_TEACHERS_URL = "/app/khazana/course-details.php"
-    const val KHAZANA_CHAPTERS_URL = "/app/khazana/chapters.php"
-    const val KHAZANA_VIDEO_URL = "/app/khazana/video.php"
-    const val KHAZANA_NOTES_URL = "/app/khazana/notes.php"
-    const val KHAZANA_DPP_URL = "/app/khazana/dpp.php"
-    const val KHAZANA_SOLUTION_URL = "/app/khazana/solution.php"
+    const val KHAZANA_COURSES_URL = "/newapp/khazana/courses.php"
+    const val KHAZANA_TEACHERS_URL = "/newapp/khazana/course-details.php"
+    const val KHAZANA_CHAPTERS_URL = "/newapp/khazana/chapters.php"
+    const val KHAZANA_VIDEO_URL = "/newapp/khazana/video.php"
+    const val KHAZANA_NOTES_URL = "/newapp/khazana/notes.php"
+    const val KHAZANA_DPP_URL = "/newapp/khazana/dpp.php"
+    const val KHAZANA_SOLUTION_URL = "/newapp/khazana/solution.php"
 
-    const val INDEX = "/app/apk/index.php"
-    const val AK_SUBJECT = "/app/apk/subjects-details.php"
-    const val AK_LESSON = "/app/apk/lesson.php"
-    const val AK_NOTES = "/app/apk/notes.php"
-    const val AK_VIDEO = "/app/apk/videos.php"
-    const val AK_VIDEO_URL = "/app/apk/play.php"
+    const val INDEX = "/newapp/apk/index.php"
+    const val AK_SUBJECT = "/newapp/apk/subjects-details.php"
+    const val AK_LESSON = "/newapp/apk/lesson.php"
+    const val AK_NOTES = "/newapp/apk/notes.php"
+    const val AK_VIDEO = "/newapp/apk/videos.php"
+    const val AK_VIDEO_URL = "/newapp/apk/play.php"
 
 
-    const val DOWNLOAD_URL = "/app/download.php"
-    const val STATUS_URL = "/app/link_status.php"
+    const val DOWNLOAD_URL = "/newapp/download.php"
+    const val STATUS_URL = "/newapp/link_status.php"
     const val TIMELINE_URL = "/newapp/timeline.php"
 
-    const val KEY_TASK_URL = "/app/show_task.php"
+    const val KEY_TASK_URL = "/newapp/show_task.php"
+
+//    User
+    const val USER_URL = "/newapp/users.php"
+    const val LEADERBOARD_URL = "/newapp/api_leaderboard.php"
 
 
-    const val VERSION = 1.6
+    const val VERSION = 2.0
 
     const val ONESIGNAL_APP_ID = "a98bcdfd-461e-48ce-8689-6ae610e1ec59"
 
 
     const val KHAZANA = "Khazana"
-    const val AK = "Ak"
     const val PW = "Pw"
+
+    const val PAGE_SIZE = 10
 
 }
 

@@ -2,12 +2,9 @@ package com.xerox.studyrays.ui.screens.khazana.khazanaLecturesScreen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -15,23 +12,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.stevdzasan.messagebar.rememberMessageBarState
-import com.xerox.studyrays.R
 import com.xerox.studyrays.network.Response
 import com.xerox.studyrays.ui.screens.khazana.KhazanaViewModel
 import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForNotes
+import com.xerox.studyrays.ui.screens.pw.lecturesScreen.EachCardForNotesLoading
 import com.xerox.studyrays.utils.DataNotFoundScreen
-import com.xerox.studyrays.utils.LoadingScreen
+import com.xerox.studyrays.utils.LoadingTemplate
 import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 import com.xerox.studyrays.utils.SearchTextField
@@ -51,17 +43,21 @@ fun KhazanaNotesScreen(
     onPdfDownloadClicked: (url: String?, title: String?) -> Unit,
 ) {
 
-    LaunchedEffect(key1 = Unit) {
-        vm.getKhazanaNotes(
-            subjectId = subjectId,
-            chapterId = chapterId,
-            topicId = topicId,
-            topicName = topicName
-        )
-    }
-
     val notesState by vm.khazanaNotes.collectAsState()
     val notesResult = notesState
+
+    LaunchedEffect(key1 = Unit) {
+        if (notesResult !is Response.Success) {
+            vm.getKhazanaNotes(
+                subjectId = subjectId,
+                chapterId = chapterId,
+                topicId = topicId,
+                topicName = topicName
+            )
+        }
+    }
+
+
     var searchText by rememberSaveable {
         mutableStateOf("")
     }
@@ -84,15 +80,21 @@ fun KhazanaNotesScreen(
             }
 
             is Response.Loading -> {
-                LoadingScreen(paddingValues = PaddingValues())
+
+                LoadingTemplate() {
+                    EachCardForNotesLoading()
+                }
+
+//                LoadingScreen(paddingValues = PaddingValues())
 
             }
 
             is Response.Success -> {
+
                 if (notesResult.data.isNullOrEmpty() || notesResult.data.isEmpty()) {
                     NoFilesFoundScreen()
                 } else {
-                    val list = notesResult.data
+                    val list = remember { notesResult.data.distinctBy { it?.url } }
                     val filteredList =
                         list.filter { it?.title?.contains(searchText, true) ?: false }
                     Column(

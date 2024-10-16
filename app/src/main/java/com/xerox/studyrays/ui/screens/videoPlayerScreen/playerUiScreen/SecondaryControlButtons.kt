@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -39,7 +39,10 @@ fun SecondaryControlButtons(
         IconButton(onClick = {
             onBackClicked()
         }) {
-            Icon(imageVector = Icons.AutoMirrored.Default.ArrowBack, contentDescription = "")
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                contentDescription = ""
+            )
         }
 
         Row(
@@ -47,7 +50,7 @@ fun SecondaryControlButtons(
             horizontalArrangement = Arrangement.Center,
             modifier = modifier
         ) {
-            CustomIconButton(
+            CustomIconButton2(
                 iconResId = R.drawable.baseline_aspect_ratio_24,
                 onClick = {
                     val newResizeMode = ResizeMode.getNewResizeMode(resizeMode)
@@ -56,11 +59,9 @@ fun SecondaryControlButtons(
                 }
             )
 
-            Spacer(Modifier.width(4.dp))
-
-            CustomIconButton(
-                iconResId = R.drawable.baseline_settings_24,
-                onClick = { /*showPlaybackSpeedDropdownMenu = true*/ onSettingsClicked() },
+            CustomIconButton2(
+                iconResId = R.drawable.videosettings,
+                onClick = {  onSettingsClicked() },
                 modifier = Modifier
             )
 

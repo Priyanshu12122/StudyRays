@@ -1,13 +1,10 @@
 package com.xerox.studyrays.ui.screens.pw.lecturesScreen
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -33,16 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.xerox.studyrays.R
 import com.xerox.studyrays.network.Response
@@ -52,6 +45,7 @@ import com.xerox.studyrays.utils.LoadingScreen
 import com.xerox.studyrays.utils.NoFilesFoundScreen
 import com.xerox.studyrays.utils.PullToRefreshLazyColumn
 import com.xerox.studyrays.utils.SearchTextField
+import com.xerox.studyrays.utils.shimmerEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,19 +60,23 @@ fun NotesScreen(
     onPdfDownloadClicked: (String?, String?) -> Unit,
 ) {
 
-    LaunchedEffect(key1 = Unit) {
-        vm.getAllNotes(
-            batchId = batchId,
-            subjectSlug = subjectSlug,
-            topicSlug = topicSlug
-        )
-
-        Log.d("TAG", "NotesScreen: $batchId  $subjectSlug  $topicSlug")
-    }
-
     val state by vm.notes.collectAsState()
     val notesResult = state
+
+    LaunchedEffect(key1 = Unit) {
+        if (notesResult !is Response.Success) {
+            vm.getAllNotes(
+                batchId = batchId,
+                subjectSlug = subjectSlug,
+                topicSlug = topicSlug
+            )
+        }
+
+    }
+
+
     var searchText by rememberSaveable { mutableStateOf("") }
+
     Column(modifier = Modifier.fillMaxSize()) {
         when (notesResult) {
             is Response.Error -> {
@@ -101,17 +99,41 @@ fun NotesScreen(
             }
 
             is Response.Loading -> {
-                LoadingScreen(paddingValues = PaddingValues())
+
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+                    LazyColumn {
+                        items(10) {
+                            EachCardForNotesLoading()
+                        }
+                    }
+                }
+
 
             }
 
             is Response.Success -> {
 
-                if (notesResult.data.isEmpty()) {
+                val result = remember { notesResult.data }
+
+                if (result.isEmpty()) {
                     NoFilesFoundScreen()
                 } else {
-                    val list = notesResult.data.sortedBy { it.homework_topic_name }
-                    val filteredList = list.filter { it.homework_topic_name.contains(searchText , ignoreCase = true) }
+                    val list = remember {
+                        notesResult.data.sortedBy { it.homework_topic_name }
+                    }
+
+                    val filteredList = list.filter {
+                        it.homework_topic_name.contains(
+                            searchText,
+                            ignoreCase = true
+                        )
+                    }
+
+
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -129,13 +151,16 @@ fun NotesScreen(
                             },
                             items = if (searchText == "") list else filteredList,
                             content = {
-                                EachCardForNotes(title = it.homework_topic_name,
+
+                                EachCardForNotes(
+                                    title = it.homework_topic_name,
                                     onViewPdfClicked = {
                                         onPdfViewClicked(
                                             it.attachment_url,
                                             it.homework_topic_name
                                         )
                                     }) {
+
                                     onPdfDownloadClicked(
                                         it.attachment_url,
                                         it.homework_topic_name
@@ -148,27 +173,11 @@ fun NotesScreen(
                                     batchId = batchId,
                                     subjectSlug = subjectSlug,
                                     topicSlug = topicSlug
-                                ){
+                                ) {
                                     vm.showSnackBar(snackbarHostState)
                                 }
-                            })
-//                        LazyColumn {
-//                            items(notesResult.data) {
-//                                EachCardForNotes(title = it.topic,
-//                                    onViewPdfClicked = {
-//                                        onPdfViewClicked(
-//                                            it.baseUrl+it.attachmentKey,
-//                                            it.topic ?: ""
-//                                        )
-//                                    }) {
-//                                    onPdfDownloadClicked(
-//                                        it.baseUrl+it.attachmentKey,
-//                                        it.topic
-//                                    )
-//                                }
-//                            }
-//                        }
-
+                            }
+                        )
 
                     }
 
@@ -180,9 +189,25 @@ fun NotesScreen(
 }
 
 
+//data class PdfDownloadState(
+//    val url: String,
+//    val name: String,
+//    var status: MutableState<DownloadStatus> = mutableStateOf(DownloadStatus.IDLE),
+//)
+//
+//
+//enum class DownloadStatus {
+//    IDLE,
+//    DOWNLOADING,
+//    COMPLETED,
+//    FAILED
+//}
+
+
 @Composable
 fun EachCardForNotes(
     title: String?,
+//    status: DownloadStatus = DownloadStatus.IDLE,
     onViewPdfClicked: () -> Unit,
     onPdfDownloadClicked: () -> Unit,
 ) {
@@ -194,20 +219,16 @@ fun EachCardForNotes(
             .shadow(
                 elevation = 20.dp,
                 shape = RoundedCornerShape(10.dp),
-                ambientColor = if (!isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+                ambientColor = Color.LightGray
             )
             .clip(RoundedCornerShape(10.dp))
-            .background(if (!isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background)
             .then(
-                if (isSystemInDarkTheme()) {
-                    Modifier.border(
-                        1.dp,
-                        Color.White.copy(0.6f),
-                        RoundedCornerShape(10.dp)
-                    )
-                } else {
-                    Modifier
-                }
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
             )
     ) {
         Row(
@@ -236,7 +257,7 @@ fun EachCardForNotes(
                     .clickable {
                         onViewPdfClicked()
                     },
-                colorFilter = ColorFilter.tint(color = if (isSystemInDarkTheme()) Color.White else Color.Black)
+                colorFilter = ColorFilter.tint(color = Color.White)
             )
 
             Image(
@@ -249,8 +270,79 @@ fun EachCardForNotes(
                     .clickable {
                         onPdfDownloadClicked()
                     },
-                colorFilter = ColorFilter.tint(color = if (isSystemInDarkTheme()) Color.White else Color.Black)
             )
+
+
+        }
+
+    }
+
+}
+
+@Composable
+fun EachCardForNotesLoading() {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .shadow(
+                elevation = 20.dp,
+                shape = RoundedCornerShape(10.dp),
+                ambientColor = Color.LightGray
+            )
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.background)
+            .then(
+                Modifier.border(
+                    1.dp,
+                    Color.White.copy(0.6f),
+                    RoundedCornerShape(10.dp)
+                )
+            )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.pdf),
+                contentDescription = "",
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(40.dp)
+                    .weight(1f)
+            )
+
+            Text(
+                text = "",
+                modifier = Modifier
+                    .weight(7f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .shimmerEffect()
+            )
+
+            Image(
+                painter = painterResource(id = R.drawable.eye),
+                contentDescription = "",
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(40.dp)
+                    .weight(1f),
+                colorFilter = ColorFilter.tint(color = Color.White)
+            )
+
+            Image(
+                painter = painterResource(id = R.drawable.download),
+                contentDescription = "",
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(40.dp)
+                    .weight(1f)
+            )
+
+
         }
 
     }
